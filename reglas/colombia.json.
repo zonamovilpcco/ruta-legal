@@ -1,0 +1,28 @@
+{
+  "region": "Colombia",
+  "revisadas": "2026-11-23",
+  "ciclorrutaKmh": 25,
+  "calzadaKmh": 40,
+  "potenciaMaxW": 1000,
+  "sinPapeles": {
+    "pesoKg": 60,
+    "kmh": 40
+  },
+  "potenciasAnteriores": "350 W (norma anterior) y 500 W (referencia usada por la Secretaría de Movilidad de Bogotá)",
+  "pesoAnteriorKg": 35,
+  "laminaDesde": "2027-01-01",
+  "fuentes": [
+    {
+      "titulo": "Ley 2486 de 2025",
+      "url": "https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=185513"
+    },
+    {
+      "titulo": "Resolución de MinTransporte",
+      "url": "https://www.elcarrocolombiano.com/movilidad/nuevas-reglas-patinetas-bicicletas-electricas-colombia-resolucion-mintransporte/"
+    },
+    {
+      "titulo": "Portafolio",
+      "url": "https://www.portafolio.co/economia/gobierno/patinetas-electricas-y-bici-motos-asi-cambian-las-reglas-para-circular-en-las-ciudades-de-colombia-500997"
+    }
+  ]
+}
