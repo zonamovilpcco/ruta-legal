@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
 <style>
   /* Layout: una sola columna pensada para el celular. Primero el formulario de la bici, abajo el veredicto y las velocidades. */
   :root {
@@ -23,6 +24,7 @@
     --warn-bg: #FBEBCF;
     --no: #9C2418;
     --no-bg: #FADFDA;
+    --tile-filter: none;
     --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
     --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   }
@@ -41,6 +43,7 @@
       --warn-bg: #3A2A0F;
       --no: #FF8F83;
       --no-bg: #3D1814;
+      --tile-filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
       color-scheme: dark;
     }
   }
@@ -58,6 +61,7 @@
     --warn-bg: #3A2A0F;
     --no: #FF8F83;
     --no-bg: #3D1814;
+      --tile-filter: invert(1) hue-rotate(180deg) brightness(0.92) contrast(0.9);
     color-scheme: dark;
   }
 
@@ -176,6 +180,22 @@
   footer a { color: var(--accent); }
   .sources { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 
+  .mapbox { display: flex; flex-direction: column; gap: 10px; }
+  #mapa { height: 52vh; min-height: 320px; max-height: 520px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); z-index: 0; }
+  .leaflet-tile-pane { filter: var(--tile-filter); }
+  .leaflet-container { font-family: var(--font-body); }
+  .mapbar { display: flex; flex-wrap: wrap; gap: 8px; }
+  .btn {
+    font: inherit; font-weight: 600; font-size: 0.9rem; cursor: pointer;
+    padding: 10px 14px; border-radius: 8px;
+    border: 1px solid var(--accent); background: var(--accent); color: var(--accent-fg);
+  }
+  .btn.sec { background: transparent; color: var(--accent); }
+  .btn:disabled { opacity: 0.55; cursor: default; }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #mapa-estado { font-size: 0.85rem; color: var(--muted); min-height: 1.3em; margin: 0; }
+  .mapnote { font-size: 0.8rem; color: var(--muted); margin: 0; max-width: 60ch; }
+
   @media (max-width: 420px) {
     .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .fields .field:last-child { grid-column: 1 / -1; }
@@ -229,6 +249,17 @@
 
   <section class="panel verdict" aria-live="polite" id="verdict"></section>
 
+  <section class="panel mapbox" aria-labelledby="t-mapa">
+    <h2 id="t-mapa" style="margin:0">Mapa</h2>
+    <div class="mapbar">
+      <button class="btn" id="btn-ubicacion" type="button">Mi ubicación</button>
+      <button class="btn sec" id="btn-ciclo" type="button">Ver ciclorrutas aquí</button>
+    </div>
+    <div id="mapa" role="application" aria-label="Mapa de ciclorrutas"></div>
+    <p id="mapa-estado" aria-live="polite"></p>
+    <p class="mapnote">Línea gruesa: ciclorruta separada de la calle. Línea punteada: carril de bici sobre la calle. El color depende de tu bici: verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Los datos vienen de OpenStreetMap y pueden tener tramos sin marcar; manda la señalización de la calle.</p>
+  </section>
+
   <section aria-labelledby="t-vel">
     <h2 id="t-vel">Velocidad máxima permitida</h2>
     <div class="speeds" id="speeds"></div>
@@ -241,6 +272,7 @@
 
   <footer>
     <p>Prototipo con las reglas de Colombia (Ley 2486 de 2025 y la resolución de MinTransporte), revisadas el 23 de noviembre de 2026. No es asesoría legal. Cada ciudad puede aplicar criterios propios, así que confirma con la Secretaría de Movilidad de tu ciudad.</p>
+    <p>Mapa y ciclorrutas: &copy; colaboradores de <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>.</p>
     <p>Las reglas están en el archivo reglas/colombia.json. Si algo cambió o está mal, se corrige ahí.</p>
     <div class="sources">
       <a href="https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=185513" target="_blank" rel="noopener">Ley 2486 de 2025</a>
@@ -250,6 +282,7 @@
   </footer>
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
 <script>
 (function () {
   // Copia de respaldo de reglas/colombia.json. Sirve cuando abres index.html con doble clic
@@ -349,6 +382,8 @@
       verdict.innerHTML = '<p class="hint">Completa potencia, velocidad y peso para ver el resultado.</p>';
       speeds.innerHTML = "";
       notes.innerHTML = "";
+      estadoActual = null;
+      pintarCiclorrutas();
       return;
     }
     var acel = esAcelerador();
@@ -378,7 +413,125 @@
       return '<li' + (x.w ? ' class="warn"' : '') + '>' + x.t + '</li>';
     }).join("");
 
+    estadoActual = { estado: r.estado, vCiclo: r.vCiclo };
+    pintarCiclorrutas();
+
     try { localStorage.setItem(KEY, JSON.stringify({ w: $("w").value, v: $("v").value, kg: $("kg").value, acel: acel ? "si" : "no", lim: $("lim").checked })); } catch (e) {}
+  }
+
+  // ===== MAPA =====
+  var mapa = null, capaCiclo = null, capaYo = null, estadoActual = null, datosCiclo = [];
+  var BOGOTA = [4.6097, -74.0817];
+  var OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
+  var MAX_TRAMOS = 5000;
+
+  function msg(t) { $("mapa-estado").textContent = t; }
+
+  function iniciarMapa() {
+    if (typeof L === "undefined") {
+      msg("No se pudo cargar el mapa. Revisa tu conexión y recarga la página.");
+      $("btn-ubicacion").disabled = true;
+      $("btn-ciclo").disabled = true;
+      return;
+    }
+    mapa = L.map("mapa").setView(BOGOTA, 13);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      maxZoom: 19,
+      attribution: '&copy; Colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(mapa);
+    capaCiclo = L.layerGroup().addTo(mapa);
+    $("btn-ubicacion").addEventListener("click", ubicar);
+    $("btn-ciclo").addEventListener("click", cargarCiclorrutas);
+    try {
+      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pintarCiclorrutas);
+    } catch (e) {}
+    msg("Acércate a tu zona y toca “Ver ciclorrutas aquí”.");
+  }
+
+  function ubicar() {
+    if (!navigator.geolocation) { msg("Este navegador no entrega la ubicación."); return; }
+    msg("Buscando tu ubicación...");
+    navigator.geolocation.getCurrentPosition(function (pos) {
+      var ll = [pos.coords.latitude, pos.coords.longitude];
+      if (capaYo) mapa.removeLayer(capaYo);
+      capaYo = L.layerGroup([
+        L.circle(ll, { radius: pos.coords.accuracy, weight: 1, fillOpacity: 0.1 }),
+        L.circleMarker(ll, { radius: 8, weight: 3, color: "#ffffff", fillColor: "#1a73e8", fillOpacity: 1 })
+      ]).addTo(mapa);
+      mapa.setView(ll, 16);
+      msg("Estás aquí. Toca “Ver ciclorrutas aquí”.");
+    }, function () {
+      msg("No pude obtener tu ubicación. Activa el permiso de ubicación del navegador para este sitio.");
+    }, { enableHighAccuracy: true, timeout: 15000 });
+  }
+
+  function pedir(q, i) {
+    return fetch(OVERPASS[i], {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: "data=" + encodeURIComponent(q)
+    }).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); })
+      .catch(function (e) { return i + 1 < OVERPASS.length ? pedir(q, i + 1) : Promise.reject(e); });
+  }
+
+  function cargarCiclorrutas() {
+    if (mapa.getZoom() < 14) { msg("Acércate más al mapa (zoom 14 o más) para cargar las ciclorrutas."); return; }
+    var b = mapa.getBounds();
+    var bb = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].map(function (x) { return x.toFixed(5); }).join(",");
+    var tipos = "^(lane|track)$";
+    var q = "[out:json][timeout:25];(" +
+      'way["highway"="cycleway"](' + bb + ");" +
+      'way["cycleway"~"' + tipos + '"](' + bb + ");" +
+      'way["cycleway:both"~"' + tipos + '"](' + bb + ");" +
+      'way["cycleway:left"~"' + tipos + '"](' + bb + ");" +
+      'way["cycleway:right"~"' + tipos + '"](' + bb + ");" +
+      ");out geom;";
+    var btn = $("btn-ciclo");
+    btn.disabled = true;
+    msg("Cargando ciclorrutas...");
+    pedir(q, 0).then(function (j) {
+      var els = (j && j.elements) || [];
+      var cortado = els.length > MAX_TRAMOS;
+      datosCiclo = cortado ? els.slice(0, MAX_TRAMOS) : els;
+      pintarCiclorrutas();
+      if (!els.length) msg("No hay ciclorrutas marcadas en esta zona. Puede que existan pero falten en OpenStreetMap.");
+      else msg(datosCiclo.length + " tramos cargados." + (cortado ? " Hay más: acércate para ver el resto." : ""));
+    }).catch(function () {
+      msg("No pude cargar las ciclorrutas. Intenta de nuevo en un momento.");
+    }).then(function () { btn.disabled = false; });
+  }
+
+  function detalle(t, dedicada) {
+    var d = document.createElement("div");
+    var a = document.createElement("strong");
+    a.textContent = t.name || (dedicada ? "Ciclorruta" : "Carril de bici en la calle");
+    d.appendChild(a);
+    var p = document.createElement("div");
+    var e = estadoActual;
+    if (!e) p.textContent = "Completa los datos de tu bici para saber si puedes usarla.";
+    else if (e.estado === "ok") p.textContent = "Tu bici puede usarla, máximo " + e.vCiclo + " km/h.";
+    else if (e.estado === "cond") p.textContent = "Solo si limitas tu bici a " + e.vCiclo + " km/h.";
+    else p.textContent = "Tu bici no puede usar este tramo.";
+    d.appendChild(p);
+    return d;
+  }
+
+  function pintarCiclorrutas() {
+    if (!mapa) return;
+    capaCiclo.clearLayers();
+    var cs = getComputedStyle(document.documentElement);
+    var mapaColor = { ok: "--ok", cond: "--warn", no: "--no" };
+    var color = cs.getPropertyValue(mapaColor[estadoActual ? estadoActual.estado : ""] || "--muted").trim();
+    datosCiclo.forEach(function (w) {
+      if (!w.geometry || w.geometry.length < 2) return;
+      var t = w.tags || {};
+      var dedicada = t.highway === "cycleway";
+      var linea = L.polyline(w.geometry.map(function (g) { return [g.lat, g.lon]; }), {
+        color: color, weight: dedicada ? 5 : 3, opacity: 0.9, dashArray: dedicada ? null : "6 6"
+      });
+      linea.bindPopup(function () { return detalle(t, dedicada); });
+      capaCiclo.addLayer(linea);
+    });
   }
 
   function iniciar() {
@@ -395,6 +548,7 @@
   ["w", "v", "kg"].forEach(function (id) { $(id).addEventListener("input", render); });
   $("lim").addEventListener("change", render);
   document.querySelectorAll('input[name="acel"]').forEach(function (r) { r.addEventListener("change", render); });
+  iniciarMapa();
   render();
   }
 
