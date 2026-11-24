@@ -1,0 +1,409 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Ruta Legal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;700&display=swap">
+<style>
+  /* Layout: una sola columna pensada para el celular. Primero el formulario de la bici, abajo el veredicto y las velocidades. */
+  :root {
+    --bg: #F2F5F3;
+    --surface: #FFFFFF;
+    --fg: #13201B;
+    --muted: #52645C;
+    --line: #D5DDD8;
+    --accent: #0E6B58;
+    --accent-fg: #FFFFFF;
+    --ok: #0B5E4D;
+    --ok-bg: #DDF1EA;
+    --warn: #7D4305;
+    --warn-bg: #FBEBCF;
+    --no: #9C2418;
+    --no-bg: #FADFDA;
+    --font-display: "Space Grotesk", "Helvetica Neue", Arial, sans-serif;
+    --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #0E1512;
+      --surface: #16201C;
+      --fg: #E7F0EB;
+      --muted: #9DB0A6;
+      --line: #2A3832;
+      --accent: #4CCBA8;
+      --accent-fg: #06241C;
+      --ok: #5AD6B3;
+      --ok-bg: #12332B;
+      --warn: #F0B25A;
+      --warn-bg: #3A2A0F;
+      --no: #FF8F83;
+      --no-bg: #3D1814;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #0E1512;
+    --surface: #16201C;
+    --fg: #E7F0EB;
+    --muted: #9DB0A6;
+    --line: #2A3832;
+    --accent: #4CCBA8;
+    --accent-fg: #06241C;
+    --ok: #5AD6B3;
+    --ok-bg: #12332B;
+    --warn: #F0B25A;
+    --warn-bg: #3A2A0F;
+    --no: #FF8F83;
+    --no-bg: #3D1814;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg);
+    color: var(--fg);
+    font-family: var(--font-body);
+    font-size: 15px;
+    line-height: 1.5;
+    padding-block: 20px 40px;
+    padding-left: max(16px, env(safe-area-inset-left, 0px));
+    padding-right: max(16px, env(safe-area-inset-right, 0px));
+  }
+  .wrap { max-width: 600px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; }
+
+  h1 {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 1.9rem;
+    line-height: 1.1;
+    margin: 0;
+    text-wrap: balance;
+  }
+  .lead { margin: 6px 0 0; color: var(--muted); max-width: 52ch; }
+  h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 0 0 10px;
+  }
+
+  .panel {
+    background: var(--surface);
+    border: 1px solid var(--line);
+    border-radius: 10px;
+    padding: 16px;
+  }
+  .example { font-size: 0.8rem; color: var(--muted); margin: 0 0 12px; }
+
+  .fields { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .field { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .field label, .legend { font-size: 0.8rem; font-weight: 500; color: var(--muted); }
+  .input-unit { position: relative; }
+  input[type="number"] {
+    width: 100%;
+    font: inherit;
+    font-size: 16px;
+    font-variant-numeric: tabular-nums;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    padding: 10px 40px 10px 10px;
+  }
+  .unit {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    font-size: 0.78rem; color: var(--muted); pointer-events: none;
+  }
+  input:focus-visible, .seg label:has(input:focus-visible) {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .row { margin-top: 14px; display: flex; flex-direction: column; gap: 6px; }
+  .seg { display: flex; border: 1px solid var(--line); border-radius: 8px; overflow: hidden; background: var(--bg); }
+  .seg label {
+    flex: 1; text-align: center; padding: 10px 8px; cursor: pointer; font-weight: 500;
+    color: var(--muted);
+  }
+  .seg label + label { border-left: 1px solid var(--line); }
+  .seg input { position: absolute; opacity: 0; pointer-events: none; }
+  .seg label:has(input:checked) { background: var(--accent); color: var(--accent-fg); }
+  .check { display: flex; gap: 10px; align-items: flex-start; cursor: pointer; }
+  .check input { width: 20px; height: 20px; margin: 1px 0 0; accent-color: var(--accent); flex: none; }
+  .check span { min-width: 0; }
+  .hint { font-size: 0.8rem; color: var(--muted); }
+
+  .verdict { display: flex; flex-direction: column; gap: 8px; }
+  .pill {
+    align-self: flex-start;
+    display: inline-flex; align-items: center; gap: 8px;
+    font-weight: 600; font-size: 0.85rem;
+    padding: 4px 12px 4px 10px; border-radius: 999px;
+  }
+  .pill::before { content: ""; width: 9px; height: 9px; border-radius: 50%; background: currentColor; }
+  .pill.ok { color: var(--ok); background: var(--ok-bg); }
+  .pill.cond { color: var(--warn); background: var(--warn-bg); }
+  .pill.no { color: var(--no); background: var(--no-bg); }
+  .cat { font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; line-height: 1.25; margin: 0; text-wrap: balance; }
+  .verdict p { margin: 0; }
+
+  .speeds { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .speed { border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--surface); min-width: 0; }
+  .speed .where { font-size: 0.8rem; color: var(--muted); font-weight: 500; }
+  .speed .num {
+    font-family: var(--font-display); font-weight: 700; font-size: 2.6rem; line-height: 1.05;
+    font-variant-numeric: tabular-nums; margin-top: 4px;
+  }
+  .speed .num small { font-size: 0.9rem; font-weight: 500; color: var(--muted); margin-left: 4px; }
+  .speed .note { font-size: 0.8rem; color: var(--muted); margin-top: 4px; }
+
+  ul.notes { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: 10px; }
+  ul.notes li { padding-left: 16px; position: relative; }
+  ul.notes li::before {
+    content: ""; position: absolute; left: 0; top: 0.6em; width: 6px; height: 6px;
+    border-radius: 50%; background: var(--muted);
+  }
+  ul.notes li.warn::before { background: var(--warn); }
+
+  footer { font-size: 0.8rem; color: var(--muted); display: flex; flex-direction: column; gap: 8px; }
+  footer p { margin: 0; max-width: 60ch; }
+  footer a { color: var(--accent); }
+  .sources { display: flex; flex-wrap: wrap; gap: 4px 14px; }
+
+  @media (max-width: 420px) {
+    .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .fields .field:last-child { grid-column: 1 / -1; }
+    h1 { font-size: 1.6rem; }
+  }
+  @media (prefers-reduced-motion: no-preference) {
+    .speed .num { transition: color 0.2s; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Ruta Legal</h1>
+    <p class="lead">Pon los datos de tu bici eléctrica y mira si puedes usar la ciclorruta, a qué velocidad y qué papeles te piden.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="t-bici">
+    <h2 id="t-bici">Tu bici</h2>
+    <p class="example">Valores de ejemplo. Cámbialos por los de tu bici; los copias del manual, la factura o la lámina.</p>
+    <div class="fields">
+      <div class="field">
+        <label for="w">Potencia del motor</label>
+        <div class="input-unit"><input id="w" type="number" inputmode="decimal" min="0" step="10" value="350"><span class="unit">W</span></div>
+      </div>
+      <div class="field">
+        <label for="v">Velocidad máxima</label>
+        <div class="input-unit"><input id="v" type="number" inputmode="decimal" min="0" step="1" value="25"><span class="unit">km/h</span></div>
+      </div>
+      <div class="field">
+        <label for="kg">Peso de la bici</label>
+        <div class="input-unit"><input id="kg" type="number" inputmode="decimal" min="0" step="1" value="28"><span class="unit">kg</span></div>
+      </div>
+    </div>
+
+    <div class="row">
+      <span class="legend" id="l-acel">¿Tiene acelerador que la mueve sin pedalear?</span>
+      <div class="seg" role="radiogroup" aria-labelledby="l-acel">
+        <label><input type="radio" name="acel" value="no" checked>No, solo asiste al pedalear</label>
+        <label><input type="radio" name="acel" value="si">Sí, tiene acelerador</label>
+      </div>
+    </div>
+
+    <div class="row" id="lim-row">
+      <label class="check" for="lim">
+        <input id="lim" type="checkbox">
+        <span>Tiene limitador que la deja en 25 km/h dentro de la ciclorruta<br><span class="hint">Cuenta cuando la bici llega a más de 25 km/h.</span></span>
+      </label>
+    </div>
+  </section>
+
+  <section class="panel verdict" aria-live="polite" id="verdict"></section>
+
+  <section aria-labelledby="t-vel">
+    <h2 id="t-vel">Velocidad máxima permitida</h2>
+    <div class="speeds" id="speeds"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="t-notas">
+    <h2 id="t-notas">Lo que tienes que cumplir</h2>
+    <ul class="notes" id="notes"></ul>
+  </section>
+
+  <footer>
+    <p>Prototipo con las reglas de Colombia (Ley 2486 de 2025 y la resolución de MinTransporte), revisadas el 23 de noviembre de 2026. No es asesoría legal. Cada ciudad puede aplicar criterios propios, así que confirma con la Secretaría de Movilidad de tu ciudad.</p>
+    <p>Las reglas están en el archivo reglas/colombia.json. Si algo cambió o está mal, se corrige ahí.</p>
+    <div class="sources">
+      <a href="https://www.alcaldiabogota.gov.co/sisjur/normas/Norma1.jsp?i=185513" target="_blank" rel="noopener">Ley 2486 de 2025</a>
+      <a href="https://www.elcarrocolombiano.com/movilidad/nuevas-reglas-patinetas-bicicletas-electricas-colombia-resolucion-mintransporte/" target="_blank" rel="noopener">Resolución de MinTransporte</a>
+      <a href="https://www.portafolio.co/economia/gobierno/patinetas-electricas-y-bici-motos-asi-cambian-las-reglas-para-circular-en-las-ciudades-de-colombia-500997" target="_blank" rel="noopener">Portafolio</a>
+    </div>
+  </footer>
+</div>
+
+<script>
+(function () {
+  // Copia de respaldo de reglas/colombia.json. Sirve cuando abres index.html con doble clic
+  // (el navegador no deja leer archivos así). Si cambias las reglas, cambia el JSON; esta copia es solo respaldo.
+  var REGLAS = {"region": "Colombia", "revisadas": "2026-11-23", "ciclorrutaKmh": 25, "calzadaKmh": 40, "potenciaMaxW": 1000, "sinPapeles": {"pesoKg": 60, "kmh": 40}, "potenciasAnteriores": "350 W (norma anterior) y 500 W (referencia usada por la Secretaría de Movilidad de Bogotá)", "pesoAnteriorKg": 35, "laminaDesde": "2027-01-01"};
+
+  var $ = function (id) { return document.getElementById(id); };
+  var KEY = "ruta-legal-bici";
+
+  function num(el) {
+    var x = parseFloat(String(el.value).replace(",", "."));
+    return isFinite(x) && x > 0 ? x : null;
+  }
+  function esAcelerador() {
+    return document.querySelector('input[name="acel"]:checked').value === "si";
+  }
+
+  function evaluar(p) {
+    var R = REGLAS, n = [];
+    var res = { notas: n };
+    var supera40 = p.v > R.sinPapeles.kmh;
+    var supera60 = p.kg > R.sinPapeles.pesoKg;
+    var pide = supera40 || supera60;
+
+    if (p.acel) {
+      res.cat = "Con acelerador: no cuenta como bicicleta eléctrica";
+      res.estado = "no";
+      res.texto = "La norma solo trata como bicicleta eléctrica a la que asiste al pedalear. Con acelerador no puedes usar la ciclorruta. Circula por la calzada, en el carril derecho.";
+      res.vCiclo = null;
+    } else if (p.w > R.potenciaMaxW) {
+      res.cat = "Más de " + R.potenciaMaxW.toLocaleString("es-CO") + " W: se trata como ciclomotor";
+      res.estado = "no";
+      res.texto = "Supera el tope de la bicicleta de pedaleo asistido. No puedes usar la ciclorruta. Circula por la calzada.";
+      res.vCiclo = null;
+    } else if (supera40) {
+      res.cat = "Bicicleta de pedaleo asistido, pero muy rápida";
+      res.estado = "no";
+      res.texto = "Con velocidad de diseño sobre " + R.sinPapeles.kmh + " km/h se trata como moto. No encontré una regla clara para ciclorrutas en este caso, así que evítalas.";
+      res.vCiclo = null;
+    } else if (p.v > R.ciclorrutaKmh && !p.lim) {
+      res.cat = "Bicicleta eléctrica de pedaleo asistido";
+      res.estado = "cond";
+      res.texto = "Llegas a " + p.v + " km/h. Puedes entrar a la ciclorruta solo si limitas la velocidad a " + R.ciclorrutaKmh + " km/h. Sin limitador, ve por el costado derecho de la calzada.";
+      res.vCiclo = R.ciclorrutaKmh;
+    } else {
+      res.cat = "Bicicleta eléctrica de pedaleo asistido";
+      res.estado = "ok";
+      res.texto = "Puedes usar ciclorrutas y ciclovías, con máximo " + R.ciclorrutaKmh + " km/h.";
+      res.vCiclo = Math.min(R.ciclorrutaKmh, p.v);
+    }
+
+    res.vCalzada = pide || p.w > R.potenciaMaxW ? null : Math.min(R.calzadaKmh, p.v);
+
+    // Papeles
+    if (pide) {
+      res.papeles = "Con más de " + R.sinPapeles.pesoKg + " kg o " + R.sinPapeles.kmh + " km/h necesitas matrícula, SOAT y licencia de conducción.";
+    } else if (p.w > R.potenciaMaxW) {
+      res.papeles = "Como ciclomotor, probablemente te piden matrícula, SOAT y licencia. Verifícalo con tránsito.";
+    } else if (p.acel) {
+      res.papeles = "Por debajo de " + R.sinPapeles.pesoKg + " kg y " + R.sinPapeles.kmh + " km/h no necesitas matrícula, SOAT ni licencia, pero sí la identificación técnica.";
+    } else {
+      res.papeles = "No necesitas matrícula, SOAT ni licencia. Sí necesitas ser mayor de 16 años.";
+    }
+    n.push({ t: res.papeles });
+
+    n.push({ t: "Casco certificado siempre. De noche o con poca visibilidad, ropa reflectiva, luz blanca adelante y luz roja atrás." });
+
+    // Lámina
+    var hoy = new Date(); hoy.setHours(0, 0, 0, 0);
+    var f = new Date(R.laminaDesde + "T00:00:00");
+    var dias = Math.round((f - hoy) / 86400000);
+    var lam = "Desde el 1 de enero de 2027 la bici debe llevar una lámina con marca, modelo, serie, año, peso, potencia, velocidad máxima y categoría. Si ya la tienes, copia esos datos de la factura o del manual.";
+    if (dias > 0) lam += " Faltan " + dias + (dias === 1 ? " día." : " días.");
+    else lam += " Ya es obligatoria.";
+    n.push({ t: lam });
+
+    n.push({ t: "Fuera del perímetro urbano no puedes entrar a túneles, viaductos ni tramos señalizados a más de 80 km/h." });
+
+    // Avisos de datos
+    if (p.w > 350 && p.w <= R.potenciaMaxW) {
+      n.push({ w: true, t: "Normas anteriores usaban " + R.potenciasAnteriores + ". La norma actual sube el tope a " + R.potenciaMaxW.toLocaleString("es-CO") + " W, pero en Bogotá confirma cómo lo aplican en los controles." });
+    }
+    if (p.kg > R.pesoAnteriorKg && !supera60) {
+      n.push({ w: true, t: "Reglas anteriores pedían máximo " + R.pesoAnteriorKg + " kg para usar la ciclorruta. Tu bici pesa " + p.kg + " kg." });
+    }
+    return res;
+  }
+
+  var LABEL = { ok: "Permitida en ciclorruta", cond: "Permitida con condición", no: "No permitida en ciclorruta" };
+
+  function render() {
+    var w = num($("w")), v = num($("v")), kg = num($("kg"));
+    var limRow = $("lim-row");
+    var verdict = $("verdict"), speeds = $("speeds"), notes = $("notes");
+
+    if (w == null || v == null || kg == null) {
+      verdict.innerHTML = '<p class="hint">Completa potencia, velocidad y peso para ver el resultado.</p>';
+      speeds.innerHTML = "";
+      notes.innerHTML = "";
+      return;
+    }
+    var acel = esAcelerador();
+    limRow.hidden = !(v > REGLAS.ciclorrutaKmh && v <= REGLAS.sinPapeles.kmh && !acel && w <= REGLAS.potenciaMaxW);
+    var p = { w: w, v: v, kg: kg, acel: acel, lim: $("lim").checked && !limRow.hidden };
+    var r = evaluar(p);
+
+    verdict.innerHTML =
+      '<span class="pill ' + r.estado + '">' + LABEL[r.estado] + '</span>' +
+      '<h3 class="cat">' + r.cat + '</h3>' +
+      '<p>' + r.texto + '</p>';
+
+    function tile(donde, valor, nota) {
+      return '<div class="speed"><div class="where">' + donde + '</div>' +
+        (valor == null
+          ? '<div class="num">&mdash;</div>'
+          : '<div class="num">' + valor + '<small>km/h</small></div>') +
+        '<div class="note">' + nota + '</div></div>';
+    }
+    speeds.innerHTML =
+      tile("En ciclorruta y ciclovía", r.vCiclo,
+        r.vCiclo == null ? "No entras" : (r.vCiclo < REGLAS.ciclorrutaKmh ? "Tu motor llega a " + r.vCiclo : "Tope de la norma")) +
+      tile("En la calzada", r.vCalzada,
+        r.vCalzada == null ? "Rigen las reglas de motos" : (r.vCalzada < REGLAS.calzadaKmh ? "Tu motor llega a " + r.vCalzada : "Tope de la norma, carril derecho"));
+
+    notes.innerHTML = r.notas.map(function (x) {
+      return '<li' + (x.w ? ' class="warn"' : '') + '>' + x.t + '</li>';
+    }).join("");
+
+    try { localStorage.setItem(KEY, JSON.stringify({ w: $("w").value, v: $("v").value, kg: $("kg").value, acel: acel ? "si" : "no", lim: $("lim").checked })); } catch (e) {}
+  }
+
+  function iniciar() {
+  try {
+    var s = JSON.parse(localStorage.getItem(KEY) || "null");
+    if (s) {
+      $("w").value = s.w; $("v").value = s.v; $("kg").value = s.kg;
+      var radio = document.querySelector('input[name="acel"][value="' + (s.acel === "si" ? "si" : "no") + '"]');
+      if (radio) radio.checked = true;
+      $("lim").checked = !!s.lim;
+    }
+  } catch (e) {}
+
+  ["w", "v", "kg"].forEach(function (id) { $(id).addEventListener("input", render); });
+  $("lim").addEventListener("change", render);
+  document.querySelectorAll('input[name="acel"]').forEach(function (r) { r.addEventListener("change", render); });
+  render();
+  }
+
+  fetch('reglas/colombia.json')
+    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
+    .then(function (j) { REGLAS = j; })
+    .catch(function () {})
+    .then(iniciar);
+})();
+</script>
+</body>
+</html>
