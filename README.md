@@ -8,7 +8,14 @@ Aplicación abierta para bicicletas eléctricas, pensada como un Organic Maps pa
 
 ## Qué hay hoy
 
-Una página (`index.html`) donde pones potencia, velocidad máxima, peso y si tu bici tiene acelerador. Te responde si puedes usar la ciclorruta, la velocidad máxima en ciclorruta y en calzada, y qué papeles y equipo te piden.
+Una app web instalable en el celular, con dos pantallas:
+
+- Mi bici: pones potencia, velocidad máxima, peso y si tiene acelerador. Te dice si puedes usar la ciclorruta, a qué velocidad y qué papeles te piden.
+- Mapa a pantalla completa, con el estilo de las apps de mapas:
+  - Búsqueda de direcciones en Bogotá (Nominatim) o un punto tocando el mapa.
+  - Ciclorrutas de OpenStreetMap dibujadas según tu bici: verde puedes, ámbar con condición, rojo no puedes.
+  - Ruta hasta el destino (Valhalla) que prefiere ciclorrutas o calles según tu bici.
+  - Guía en marcha: banner de giro, señal con el límite de velocidad, tu velocidad por GPS, aviso con sonido, voz y vibración si te pasas, y recálculo si te sales de la ruta.
 
 Las reglas no están en el código sino en `reglas/colombia.json`. Así cualquiera puede corregirlas sin saber programar.
 
@@ -48,11 +55,10 @@ Aviso: normas anteriores hablaban de 350 W y 500 W, y Bogotá ha aplicado criter
 
 ## Siguientes pasos
 
-1. Publicar en GitHub Pages.
-2. Mapa con OpenStreetMap y Leaflet.
-3. Rutas con BRouter o Valhalla usando el perfil de la bici.
-4. Selector de ciudad.
-5. App de celular.
+1. Marcar sitios (robo, hueco, calle oscura) y avisar al acercarse.
+2. Modo repartidor: varias paradas en orden.
+3. Selector de ciudad.
+4. Servicios de ruta y búsqueda propios, para no depender de los públicos.
 
 ## Licencia
 
