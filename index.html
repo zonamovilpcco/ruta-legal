@@ -66,7 +66,9 @@
   }
 
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   body {
+    margin: 0;
     background: var(--bg);
     color: var(--fg);
     font-family: var(--font-body);
@@ -191,9 +193,21 @@
     border: 1px solid var(--accent); background: var(--accent); color: var(--accent-fg);
   }
   .btn.sec { background: transparent; color: var(--accent); }
+  .btn.sec[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
   .btn:disabled { opacity: 0.55; cursor: default; }
   .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   #mapa-estado { font-size: 0.85rem; color: var(--muted); min-height: 1.3em; margin: 0; }
+  #ruta-resumen { font-size: 0.9rem; margin: 0; }
+  #ruta-pasos { font-size: 0.85rem; }
+  #ruta-pasos summary { cursor: pointer; font-weight: 600; color: var(--accent); }
+  #ruta-pasos ol { margin: 8px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
+  .hud { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+  .hud .speed.over { border-color: var(--no); background: var(--no-bg); }
+  .hud .speed.over .num { color: var(--no); }
+  .alerta { padding: 12px 14px; border-radius: 8px; background: var(--no-bg); color: var(--no); font-weight: 600; margin: 0; }
+  #hud-sig { margin: 0; font-size: 1rem; font-weight: 500; }
+  #hud-info { margin: 0; font-size: 0.85rem; color: var(--muted); }
+  .guia-opts { display: flex; flex-wrap: wrap; gap: 8px 18px; }
   .mapnote { font-size: 0.8rem; color: var(--muted); margin: 0; max-width: 60ch; }
 
   @media (max-width: 420px) {
@@ -249,15 +263,53 @@
 
   <section class="panel verdict" aria-live="polite" id="verdict"></section>
 
+  <section class="panel mapbox" aria-labelledby="t-guia" id="guia">
+    <h2 id="t-guia" style="margin:0">Guía en marcha</h2>
+    <div class="mapbar">
+      <button class="btn" id="btn-guia" type="button">Iniciar guía</button>
+    </div>
+    <div class="guia-opts">
+      <label class="check" for="chk-voz"><input id="chk-voz" type="checkbox" checked><span>Voz, sonido y vibración</span></label>
+      <label class="check" for="chk-sigue"><input id="chk-sigue" type="checkbox" checked><span>El mapa me sigue</span></label>
+      <label class="check" for="chk-dom"><input id="chk-dom" type="checkbox"><span>Estoy en la ciclovía dominical o festiva</span></label>
+    </div>
+    <div class="hud" id="hud" hidden>
+      <div class="speed" id="hud-vel">
+        <div class="where">Tu velocidad</div>
+        <div class="num"><span id="hud-kmh-n">0</span><small>km/h</small></div>
+      </div>
+      <div class="speed">
+        <div class="where" id="hud-donde">Calle</div>
+        <div class="num"><span id="hud-lim-n">40</span><small>km/h máx</small></div>
+      </div>
+    </div>
+    <p class="alerta" id="hud-alerta" role="alert" hidden></p>
+    <p id="hud-sig" aria-live="polite" hidden></p>
+    <p id="hud-info" aria-live="polite"></p>
+    <p class="mapnote">Usa soporte para el celular o auricular y mantén los ojos en el camino; no toques la pantalla andando. La velocidad sale del GPS y puede variar un poco. El aviso suena cuando pasas 1 km/h del límite. La ciclovía dominical y festiva no está en OpenStreetMap: actívala a mano cuando estés en ella. La guía necesita la pantalla encendida y el navegador abierto.</p>
+  </section>
+
   <section class="panel mapbox" aria-labelledby="t-mapa">
     <h2 id="t-mapa" style="margin:0">Mapa</h2>
     <div class="mapbar">
       <button class="btn" id="btn-ubicacion" type="button">Mi ubicación</button>
       <button class="btn sec" id="btn-ciclo" type="button">Ver ciclorrutas aquí</button>
     </div>
+    <div class="mapbar" role="group" aria-label="Ruta">
+      <button class="btn sec" id="btn-salida" type="button" aria-pressed="false">Poner salida</button>
+      <button class="btn sec" id="btn-llegada" type="button" aria-pressed="false">Poner llegada</button>
+      <button class="btn sec" id="btn-desde-aqui" type="button">Salir de mi ubicación</button>
+      <button class="btn" id="btn-ruta" type="button" disabled>Trazar ruta</button>
+      <button class="btn sec" id="btn-borrar" type="button">Borrar</button>
+    </div>
     <div id="mapa" role="application" aria-label="Mapa de ciclorrutas"></div>
     <p id="mapa-estado" aria-live="polite"></p>
-    <p class="mapnote">Línea gruesa: ciclorruta separada de la calle. Línea punteada: carril de bici sobre la calle. El color depende de tu bici: verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Los datos vienen de OpenStreetMap y pueden tener tramos sin marcar; manda la señalización de la calle.</p>
+    <p id="ruta-resumen" aria-live="polite" hidden></p>
+    <details id="ruta-pasos" hidden>
+      <summary>Indicaciones paso a paso</summary>
+      <ol id="ruta-lista"></ol>
+    </details>
+    <p class="mapnote">Línea gruesa: ciclorruta separada de la calle. Línea punteada: carril de bici sobre la calle. El color depende de tu bici: verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para una ruta, toca “Poner salida” o “Poner llegada” y luego el punto en el mapa. La ruta la calcula un servicio gratuito de OpenStreetMap que no conoce las reglas de Colombia: úsala como guía y respeta las señales. Los datos vienen de OpenStreetMap y pueden tener tramos sin marcar; manda la señalización de la calle.</p>
   </section>
 
   <section aria-labelledby="t-vel">
@@ -424,6 +476,11 @@
   var BOGOTA = [4.6097, -74.0817];
   var OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
   var MAX_TRAMOS = 5000;
+  var VALHALLA = "https://valhalla1.openstreetmap.de/route";
+  var idxCiclo = [], navId = null, navUlt = null, navCentro = null, navCargando = false, navEspera = 0;
+  var wake = null, audioCtx = null, rutaPts = [], rutaMan = [], sigIdx = 0, avisadoMan = -1;
+  var ultAlerta = { tipo: "", tBip: 0, tVoz: 0 }, llego = false;
+  var capaRuta = null, capaPuntos = null, puntoA = null, puntoB = null, modo = null;
 
   function msg(t) { $("mapa-estado").textContent = t; }
 
@@ -432,6 +489,7 @@
       msg("No se pudo cargar el mapa. Revisa tu conexión y recarga la página.");
       $("btn-ubicacion").disabled = true;
       $("btn-ciclo").disabled = true;
+      ["btn-salida", "btn-llegada", "btn-desde-aqui", "btn-borrar", "btn-guia"].forEach(function (id) { $(id).disabled = true; });
       return;
     }
     mapa = L.map("mapa").setView(BOGOTA, 13);
@@ -439,7 +497,19 @@
       maxZoom: 19,
       attribution: '&copy; Colaboradores de <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
     }).addTo(mapa);
+    mapa.createPane("ruta");
+    mapa.getPane("ruta").style.zIndex = 450;
     capaCiclo = L.layerGroup().addTo(mapa);
+    capaRuta = L.layerGroup().addTo(mapa);
+    capaPuntos = L.layerGroup().addTo(mapa);
+    mapa.on("click", alMapa);
+    $("btn-salida").addEventListener("click", function () { setModo(modo === "A" ? null : "A"); });
+    $("btn-llegada").addEventListener("click", function () { setModo(modo === "B" ? null : "B"); });
+    $("btn-desde-aqui").addEventListener("click", salirDeAqui);
+    $("btn-ruta").addEventListener("click", trazarRuta);
+    $("btn-borrar").addEventListener("click", borrarRuta);
+    $("btn-guia").addEventListener("click", function () { if (navId === null) iniciarGuia(); else detenerGuia(); });
+    document.addEventListener("visibilitychange", function () { if (navId !== null && document.visibilityState === "visible") pedirWake(); });
     $("btn-ubicacion").addEventListener("click", ubicar);
     $("btn-ciclo").addEventListener("click", cargarCiclorrutas);
     try {
@@ -448,21 +518,148 @@
     msg("Acércate a tu zona y toca “Ver ciclorrutas aquí”.");
   }
 
-  function ubicar() {
+  function obtenerUbicacion(ok) {
     if (!navigator.geolocation) { msg("Este navegador no entrega la ubicación."); return; }
     msg("Buscando tu ubicación...");
-    navigator.geolocation.getCurrentPosition(function (pos) {
-      var ll = [pos.coords.latitude, pos.coords.longitude];
-      if (capaYo) mapa.removeLayer(capaYo);
-      capaYo = L.layerGroup([
-        L.circle(ll, { radius: pos.coords.accuracy, weight: 1, fillOpacity: 0.1 }),
-        L.circleMarker(ll, { radius: 8, weight: 3, color: "#ffffff", fillColor: "#1a73e8", fillOpacity: 1 })
-      ]).addTo(mapa);
-      mapa.setView(ll, 16);
-      msg("Estás aquí. Toca “Ver ciclorrutas aquí”.");
-    }, function () {
+    navigator.geolocation.getCurrentPosition(ok, function () {
       msg("No pude obtener tu ubicación. Activa el permiso de ubicación del navegador para este sitio.");
     }, { enableHighAccuracy: true, timeout: 15000 });
+  }
+
+  function mostrarYo(pos) {
+    var ll = [pos.coords.latitude, pos.coords.longitude];
+    if (capaYo) mapa.removeLayer(capaYo);
+    capaYo = L.layerGroup([
+      L.circle(ll, { radius: pos.coords.accuracy, weight: 1, fillOpacity: 0.1 }),
+      L.circleMarker(ll, { radius: 8, weight: 3, color: "#ffffff", fillColor: "#1a73e8", fillOpacity: 1 })
+    ]).addTo(mapa);
+    return ll;
+  }
+
+  function ubicar() {
+    obtenerUbicacion(function (pos) {
+      mapa.setView(mostrarYo(pos), 16);
+      msg("Estás aquí. Toca “Ver ciclorrutas aquí”.");
+    });
+  }
+
+  // ===== RUTA =====
+  function setModo(m) {
+    modo = m;
+    $("btn-salida").setAttribute("aria-pressed", m === "A" ? "true" : "false");
+    $("btn-llegada").setAttribute("aria-pressed", m === "B" ? "true" : "false");
+    if (m === "A") msg("Toca el mapa donde sales.");
+    else if (m === "B") msg("Toca el mapa donde llegas.");
+  }
+
+  function alMapa(e) {
+    if (!modo) return;
+    var ll = [e.latlng.lat, e.latlng.lng];
+    if (modo === "A") { puntoA = ll; setModo(puntoB ? null : "B"); }
+    else { puntoB = ll; setModo(null); }
+    dibujarPuntos();
+    if (puntoA && puntoB) trazarRuta();
+  }
+
+  function dibujarPuntos() {
+    capaPuntos.clearLayers();
+    function punto(ll, color, texto) {
+      var m = L.circleMarker(ll, { pane: "ruta", radius: 9, weight: 3, color: "#ffffff", fillColor: color, fillOpacity: 1 });
+      m.bindTooltip(texto);
+      capaPuntos.addLayer(m);
+    }
+    if (puntoA) punto(puntoA, "#0b8043", "Salida");
+    if (puntoB) punto(puntoB, "#d93025", "Llegada");
+    $("btn-ruta").disabled = !(puntoA && puntoB);
+  }
+
+  function salirDeAqui() {
+    obtenerUbicacion(function (pos) {
+      puntoA = mostrarYo(pos);
+      mapa.setView(puntoA, 16);
+      setModo(puntoB ? null : "B");
+      dibujarPuntos();
+      if (puntoB) trazarRuta();
+    });
+  }
+
+  function borrarRuta() {
+    puntoA = null; puntoB = null;
+    setModo(null);
+    capaRuta.clearLayers();
+    capaPuntos.clearLayers();
+    rutaPts = []; rutaMan = []; sigIdx = 0; avisadoMan = -1;
+    $("btn-ruta").disabled = true;
+    $("ruta-resumen").hidden = true;
+    $("ruta-pasos").hidden = true;
+    msg("Ruta borrada.");
+  }
+
+  function decodificar(str) {
+    var i = 0, lat = 0, lng = 0, out = [];
+    function siguiente() {
+      var b, shift = 0, result = 0;
+      do { b = str.charCodeAt(i++) - 63; result |= (b & 31) << shift; shift += 5; } while (b >= 32);
+      return (result & 1) ? ~(result >> 1) : (result >> 1);
+    }
+    while (i < str.length) {
+      lat += siguiente();
+      lng += siguiente();
+      out.push([lat / 1e6, lng / 1e6]);
+    }
+    return out;
+  }
+
+  function trazarRuta() {
+    if (!(puntoA && puntoB)) return;
+    var e = estadoActual;
+    var v = num($("v")) || 25;
+    var uso = e ? (e.estado === "ok" ? 0.15 : (e.estado === "cond" ? 0.4 : 0.9)) : 0.5;
+    var vel = Math.round(Math.max(8, Math.min(v, e && e.estado === "no" ? REGLAS.calzadaKmh : REGLAS.ciclorrutaKmh)));
+    var req = {
+      locations: [{ lat: puntoA[0], lon: puntoA[1] }, { lat: puntoB[0], lon: puntoB[1] }],
+      costing: "bicycle",
+      costing_options: { bicycle: { bicycle_type: "Hybrid", cycling_speed: vel, use_roads: uso } },
+      directions_options: { language: "es-ES", units: "kilometers" }
+    };
+    var btn = $("btn-ruta");
+    btn.disabled = true;
+    msg("Trazando ruta...");
+    fetch(VALHALLA + "?json=" + encodeURIComponent(JSON.stringify(req)))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); })
+      .then(function (j) {
+        var leg = j.trip.legs[0];
+        var pts = decodificar(leg.shape);
+        rutaPts = pts; rutaMan = leg.maneuvers || []; sigIdx = 0; avisadoMan = -1;
+        capaRuta.clearLayers();
+        capaRuta.addLayer(L.polyline(pts, { pane: "ruta", color: "#ffffff", weight: 10, opacity: 0.85, interactive: false }));
+        var color = getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+        var linea = L.polyline(pts, { pane: "ruta", color: color, weight: 6, opacity: 1, interactive: false });
+        capaRuta.addLayer(linea);
+        mapa.fitBounds(linea.getBounds(), { padding: [30, 30] });
+
+        var km = j.trip.summary.length, min = Math.max(1, Math.round(j.trip.summary.time / 60));
+        var uso1 = !e ? "" : (e.estado === "ok" ? " La ruta prefiere ciclorrutas, donde puedes ir hasta " + e.vCiclo + " km/h."
+          : (e.estado === "cond" ? " La ruta prefiere ciclorrutas, pero solo si limitas la bici a " + e.vCiclo + " km/h."
+          : " La ruta prefiere calles. Con esta bici no entres a ciclorrutas."));
+        var res = $("ruta-resumen");
+        res.textContent = "Ruta: " + km.toLocaleString("es-CO", { maximumFractionDigits: 1 }) + " km, unos " + min + " min a " + vel + " km/h." + uso1 + " Si cambias los datos de tu bici, toca “Trazar ruta” otra vez.";
+        res.hidden = false;
+
+        var lista = $("ruta-lista");
+        lista.innerHTML = "";
+        (leg.maneuvers || []).forEach(function (m) {
+          var li = document.createElement("li");
+          li.textContent = m.instruction;
+          lista.appendChild(li);
+        });
+        $("ruta-pasos").hidden = !(leg.maneuvers && leg.maneuvers.length);
+        msg("Ruta lista.");
+      })
+      .catch(function () {
+        msg("No pude trazar la ruta. Pon los puntos sobre calles y prueba de nuevo.");
+      })
+      .then(function () { btn.disabled = !(puntoA && puntoB); });
   }
 
   function pedir(q, i) {
@@ -474,18 +671,22 @@
       .catch(function (e) { return i + 1 < OVERPASS.length ? pedir(q, i + 1) : Promise.reject(e); });
   }
 
-  function cargarCiclorrutas() {
-    if (mapa.getZoom() < 14) { msg("Acércate más al mapa (zoom 14 o más) para cargar las ciclorrutas."); return; }
-    var b = mapa.getBounds();
-    var bb = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].map(function (x) { return x.toFixed(5); }).join(",");
+  function armarConsulta(bb) {
     var tipos = "^(lane|track)$";
-    var q = "[out:json][timeout:25];(" +
+    return "[out:json][timeout:25];(" +
       'way["highway"="cycleway"](' + bb + ");" +
       'way["cycleway"~"' + tipos + '"](' + bb + ");" +
       'way["cycleway:both"~"' + tipos + '"](' + bb + ");" +
       'way["cycleway:left"~"' + tipos + '"](' + bb + ");" +
       'way["cycleway:right"~"' + tipos + '"](' + bb + ");" +
       ");out geom;";
+  }
+
+  function cargarCiclorrutas() {
+    if (mapa.getZoom() < 14) { msg("Acércate más al mapa (zoom 14 o más) para cargar las ciclorrutas."); return; }
+    var b = mapa.getBounds();
+    var bb = [b.getSouth(), b.getWest(), b.getNorth(), b.getEast()].map(function (x) { return x.toFixed(5); }).join(",");
+    var q = armarConsulta(bb);
     var btn = $("btn-ciclo");
     btn.disabled = true;
     msg("Cargando ciclorrutas...");
@@ -493,6 +694,7 @@
       var els = (j && j.elements) || [];
       var cortado = els.length > MAX_TRAMOS;
       datosCiclo = cortado ? els.slice(0, MAX_TRAMOS) : els;
+      indexarCiclo();
       pintarCiclorrutas();
       if (!els.length) msg("No hay ciclorrutas marcadas en esta zona. Puede que existan pero falten en OpenStreetMap.");
       else msg(datosCiclo.length + " tramos cargados." + (cortado ? " Hay más: acércate para ver el resto." : ""));
@@ -527,11 +729,214 @@
       var t = w.tags || {};
       var dedicada = t.highway === "cycleway";
       var linea = L.polyline(w.geometry.map(function (g) { return [g.lat, g.lon]; }), {
-        color: color, weight: dedicada ? 5 : 3, opacity: 0.9, dashArray: dedicada ? null : "6 6"
+        color: color, weight: dedicada ? 5 : 3, opacity: 0.9, dashArray: dedicada ? null : "6 6", bubblingMouseEvents: false
       });
       linea.bindPopup(function () { return detalle(t, dedicada); });
       capaCiclo.addLayer(linea);
     });
+  }
+
+  // ===== GUÍA EN MARCHA =====
+  function msgGuia(t) { $("hud-info").textContent = t; }
+
+  function indexarCiclo() {
+    idxCiclo = [];
+    datosCiclo.forEach(function (w) {
+      if (!w.geometry || w.geometry.length < 2) return;
+      var pts = w.geometry.map(function (g) { return [g.lat, g.lon]; });
+      var o = { pts: pts, minLa: 90, maxLa: -90, minLo: 180, maxLo: -180 };
+      pts.forEach(function (q) {
+        if (q[0] < o.minLa) o.minLa = q[0]; if (q[0] > o.maxLa) o.maxLa = q[0];
+        if (q[1] < o.minLo) o.minLo = q[1]; if (q[1] > o.maxLo) o.maxLo = q[1];
+      });
+      idxCiclo.push(o);
+    });
+  }
+
+  function metros(a, b) {
+    var k = 111320, dx = (b[1] - a[1]) * k * Math.cos(a[0] * Math.PI / 180), dy = (b[0] - a[0]) * k;
+    return Math.sqrt(dx * dx + dy * dy);
+  }
+
+  function distSeg(p, a, b) {
+    var k = 111320, c = Math.cos(p[0] * Math.PI / 180);
+    var ax = (a[1] - p[1]) * k * c, ay = (a[0] - p[0]) * k, bx = (b[1] - p[1]) * k * c, by = (b[0] - p[0]) * k;
+    var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    var t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+    var x = ax + t * dx, y = ay + t * dy;
+    return Math.sqrt(x * x + y * y);
+  }
+
+  function enCiclo(ll, radio) {
+    var m = 0.0003;
+    for (var i = 0; i < idxCiclo.length; i++) {
+      var w = idxCiclo[i];
+      if (ll[0] < w.minLa - m || ll[0] > w.maxLa + m || ll[1] < w.minLo - m || ll[1] > w.maxLo + m) continue;
+      for (var j = 0; j < w.pts.length - 1; j++) {
+        if (distSeg(ll, w.pts[j], w.pts[j + 1]) <= radio) return true;
+      }
+    }
+    return false;
+  }
+
+  function hablar(t) {
+    try {
+      if (!("speechSynthesis" in window)) return;
+      var u = new SpeechSynthesisUtterance(t);
+      u.lang = "es-CO";
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch (e) {}
+  }
+
+  function pitar() {
+    try {
+      if (audioCtx) {
+        var o = audioCtx.createOscillator(), g = audioCtx.createGain();
+        o.frequency.value = 880; g.gain.value = 0.2;
+        o.connect(g); g.connect(audioCtx.destination);
+        o.start(); o.stop(audioCtx.currentTime + 0.25);
+      }
+    } catch (e) {}
+    try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {}
+  }
+
+  function pedirWake() {
+    try {
+      if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () {});
+    } catch (e) {}
+  }
+
+  function evaluarVelocidad(ll, kmh, acc) {
+    var e = estadoActual;
+    var dom = $("chk-dom").checked;
+    var via = dom || enCiclo(ll, Math.max(12, Math.min(25, acc || 15)));
+    var lim = via ? REGLAS.ciclorrutaKmh : REGLAS.calzadaKmh;
+    var donde = dom ? "Ciclovía" : (via ? "Ciclorruta" : "Calle");
+    var tipo = "", texto = "", voz = "";
+    if (via && e && e.estado === "no") {
+      tipo = "ciclo-no";
+      texto = "Estás en una ciclorruta y tu bici no puede usarla. Pasa a la calle.";
+      voz = "Estás en una ciclorruta que tu bici no puede usar. Pasa a la calle.";
+    } else if (kmh > lim + 1) {
+      tipo = via ? "ciclo-vel" : "calle-vel";
+      texto = "Vas a " + Math.round(kmh) + " km/h. " + (dom ? "En la ciclovía" : (via ? "En ciclorruta" : "En la calle")) + " el máximo es " + lim + ". Baja la velocidad.";
+      voz = "Baja la velocidad. El máximo es " + lim + ".";
+    }
+    $("hud-kmh-n").textContent = Math.round(kmh);
+    $("hud-lim-n").textContent = lim;
+    $("hud-donde").textContent = donde;
+    $("hud-vel").classList.toggle("over", tipo !== "");
+    var al = $("hud-alerta");
+    al.hidden = tipo === "";
+    al.textContent = texto;
+    var ahora = Date.now();
+    if (tipo) {
+      if ($("chk-voz").checked) {
+        if (ahora - ultAlerta.tBip > 4000) { pitar(); ultAlerta.tBip = ahora; }
+        if (tipo !== ultAlerta.tipo || ahora - ultAlerta.tVoz > 15000) { hablar(voz); ultAlerta.tVoz = ahora; }
+      }
+    }
+    ultAlerta.tipo = tipo;
+    msgGuia(idxCiclo.length ? "" : "Sin datos de ciclorrutas en esta zona: el límite que ves es el de la calle. En ciclorruta el máximo es " + REGLAS.ciclorrutaKmh + " km/h.");
+  }
+
+  function textoDistancia(d) {
+    return d >= 1000 ? (d / 1000).toLocaleString("es-CO", { maximumFractionDigits: 1 }) + " km" : (Math.round(d / 10) * 10) + " m";
+  }
+
+  function avanzarRuta(ll) {
+    var el = $("hud-sig");
+    if (!rutaMan.length || !rutaPts.length) {
+      el.hidden = false;
+      el.textContent = "Sin ruta. Traza una para recibir indicaciones; el aviso de velocidad funciona igual.";
+      return;
+    }
+    var ult = rutaMan.length - 1;
+    for (var k = ult; k >= sigIdx; k--) {
+      if (metros(ll, rutaPts[rutaMan[k].begin_shape_index]) < 25) { sigIdx = Math.min(k + 1, ult); break; }
+    }
+    var m = rutaMan[sigIdx], d = metros(ll, rutaPts[m.begin_shape_index]);
+    el.hidden = false;
+    if (sigIdx === ult && d < 25) {
+      el.textContent = "Llegaste a tu destino.";
+      if (!llego && $("chk-voz").checked) hablar("Llegaste a tu destino.");
+      llego = true;
+      return;
+    }
+    llego = false;
+    el.textContent = "En " + textoDistancia(d) + ": " + m.instruction;
+    if (d < 150 && avisadoMan !== sigIdx) {
+      avisadoMan = sigIdx;
+      if ($("chk-voz").checked) hablar("Más adelante. " + m.instruction);
+    }
+  }
+
+  function cargarAlrededor(ll) {
+    if (navCargando) return;
+    navCargando = true;
+    var d = 0.01;
+    var bb = [ll[0] - d, ll[1] - d, ll[0] + d, ll[1] + d].map(function (x) { return x.toFixed(5); }).join(",");
+    pedir(armarConsulta(bb), 0).then(function (j) {
+      var els = (j && j.elements) || [];
+      datosCiclo = els.length > MAX_TRAMOS ? els.slice(0, MAX_TRAMOS) : els;
+      navCentro = ll;
+      indexarCiclo();
+      pintarCiclorrutas();
+    }).catch(function () {
+      navCentro = null;
+      navEspera = Date.now() + 30000;
+    }).then(function () { navCargando = false; });
+  }
+
+  function alPosicion(pos) {
+    var ll = [pos.coords.latitude, pos.coords.longitude];
+    var t = pos.timestamp || Date.now();
+    var ms = pos.coords.speed;
+    var kmh = 0;
+    if (ms !== null && ms !== undefined && isFinite(ms)) kmh = ms * 3.6;
+    else if (navUlt && t - navUlt.t >= 500 && t - navUlt.t <= 10000) {
+      kmh = metros(navUlt.ll, ll) / ((t - navUlt.t) / 1000) * 3.6;
+      if (kmh < 1.5) kmh = 0;
+    }
+    if (kmh < 0.5) kmh = 0;
+    navUlt = { ll: ll, t: t };
+    mostrarYo(pos);
+    if ($("chk-sigue").checked) mapa.panTo(ll);
+    if ((navCentro && metros(navCentro, ll) > 600) || (!navCentro && Date.now() >= navEspera)) cargarAlrededor(ll);
+    evaluarVelocidad(ll, kmh, pos.coords.accuracy);
+    avanzarRuta(ll);
+  }
+
+  function iniciarGuia() {
+    if (!navigator.geolocation) { msgGuia("Este navegador no entrega la ubicación."); return; }
+    try {
+      audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+      audioCtx.resume();
+    } catch (e) {}
+    navCentro = null; navUlt = null; navEspera = 0; llego = false;
+    ultAlerta = { tipo: "", tBip: 0, tVoz: 0 };
+    $("btn-guia").textContent = "Detener guía";
+    $("hud").hidden = false;
+    msgGuia("Buscando señal de GPS...");
+    navId = navigator.geolocation.watchPosition(alPosicion, function (err) {
+      msgGuia("No pude seguir tu ubicación. Activa el permiso de ubicación del navegador para este sitio.");
+      if (err && err.code === 1) detenerGuia();
+    }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
+    pedirWake();
+  }
+
+  function detenerGuia() {
+    try { if (navId !== null) navigator.geolocation.clearWatch(navId); } catch (e) {}
+    navId = null;
+    try { if (wake) wake.release(); } catch (e) {}
+    wake = null;
+    try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
+    $("btn-guia").textContent = "Iniciar guía";
+    $("hud").hidden = true;
+    $("hud-alerta").hidden = true;
+    $("hud-sig").hidden = true;
+    msgGuia("");
   }
 
   function iniciar() {
