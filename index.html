@@ -1036,12 +1036,44 @@
       });
   }
 
+  // Consulta un servicio ArcGIS. Primero normal (GeoJSON); si el navegador lo bloquea (CORS), reintenta con JSONP,
+  // que no tiene esa restricción, y convierte la respuesta al mismo formato.
+  function jsonp(url) {
+    return new Promise(function (res, rej) {
+      var cb = "arc" + Date.now() + Math.floor(Math.random() * 1e5), sc = document.createElement("script");
+      function limpiar() { clearTimeout(to); try { delete window[cb]; } catch (e) { window[cb] = undefined; } if (sc.parentNode) sc.parentNode.removeChild(sc); }
+      var to = setTimeout(function () { limpiar(); rej(new Error("sin respuesta")); }, 15000);
+      window[cb] = function (d) { limpiar(); res(d); };
+      sc.onerror = function () { limpiar(); rej(new Error("bloqueado")); };
+      sc.src = url + "&f=json&callback=" + cb;
+      document.head.appendChild(sc);
+    });
+  }
+
+  function consultaArcgis(url) {
+    return fetch(url + "&f=geojson").then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (j) { if (j && j.error) throw new Error("servicio"); return j; })
+      .catch(function () {
+        return jsonp(url).then(function (d) {
+          if (d && d.error) throw new Error((d.error.message || "servicio"));
+          return { features: (d.features || []).map(function (f) {
+            var g = f.geometry, geo = null;
+            if (g && g.rings) geo = { type: "Polygon", coordinates: g.rings };
+            else if (g && g.x !== undefined) geo = { type: "Point", coordinates: [g.x, g.y] };
+            return { geometry: geo, properties: f.attributes || {} };
+          }) };
+        });
+      });
+  }
+
   // Placas domiciliarias oficiales (Catastro de Bogotá, capa "Placa Domiciliaria").
   // En esa capa la vía es p. ej. "CL 27 S" o "KR 12F" y el texto es "cruce puerta [S]", p. ej. "12D 33" o "27 26 S".
   var PLACAS = "https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/Mapa_Referencia/Mapa_Referencia/MapServer/34";
   var SIGLAS = { "avenida calle": "AC", "avenida carrera": "AK", calle: "CL", carrera: "KR", diagonal: "DG", transversal: "TV" };
 
+  var notaPlaca = "";
   function buscarPlaca(q) {
+    notaPlaca = "";
     var l = limpiarDireccion(q);
     var m = /^(Avenida Calle|Avenida Carrera|Calle|Carrera|Diagonal|Transversal)\s+(\d+\s?[A-Za-z]?)(\s+Bis)?(?:\s+(Sur|Este))?\s+(\d+\s?[A-Za-z]?)\s*[- ]\s*(\d+)(?:\s+(Sur|Este))?$/i.exec(l);
     if (!m) return Promise.resolve([]);
@@ -1053,8 +1085,8 @@
     var via = sigla + " " + n1 + (esCalle && cuad ? " " + cuad : "");
     var texto = cruce + " %" + (!esCalle && cuad ? " " + cuad : "");
     var where = "PDONVIAL='" + via + "' AND PDOTEXTO LIKE '" + texto + "'";
-    var url = PLACAS + "/query?where=" + encodeURIComponent(where) + "&outFields=PDOTEXTO,PDONVIAL&outSR=4326&geometryPrecision=6&resultRecordCount=300&f=geojson";
-    return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); }).then(function (j) {
+    var url = PLACAS + "/query?where=" + encodeURIComponent(where) + "&outFields=PDOTEXTO,PDONVIAL&outSR=4326&geometryPrecision=6&resultRecordCount=300";
+    return consultaArcgis(url).then(function (j) {
       var mejor = null, dm = 1e9;
       (j.features || []).forEach(function (f) {
         if (!f.geometry || !f.properties) return;
@@ -1063,13 +1095,13 @@
         var d = Math.abs(n - puerta) * 2 + ((n % 2) === (puerta % 2) ? 0 : 1);
         if (d < dm) { dm = d; mejor = { f: f, n: n }; }
       });
-      if (!mejor) return [];
+      if (!mejor) { notaPlaca = "Placas del Catastro: no encontré placas en esa cuadra (" + via + " con " + cruce + ")."; return []; }
       var c = mejor.f.geometry.coordinates;
       var nombre = m[1].replace(/\b\w/g, function (x) { return x.toUpperCase(); }) + " " + n1.replace(/BIS$/, " Bis") + (cuad === "S" && esCalle ? " Sur" : "") +
         " # " + cruce + "-" + mejor.n + (cuad === "S" && !esCalle ? " Sur" : "");
       return [{ lat: c[1], lon: c[0], nombre: nombre,
         sub: mejor.n === puerta ? "Placa oficial del Catastro de Bogotá" : "Placa más cercana a la que buscas (" + puerta + "), del Catastro de Bogotá" }];
-    }).catch(function () { return []; });
+    }).catch(function (e) { notaPlaca = "Placas del Catastro: no pude consultarlas (" + ((e && e.message) || "error") + ")."; return []; });
   }
 
   // Direcciones de Bogotá "Calle 33 Sur # 18A-27": la calle es la 33 Sur, el cruce más cercano es la carrera 18A
@@ -1143,10 +1175,15 @@
     ul.innerHTML = "";
     if (!items.length) {
       ul.hidden = true;
-      toast("No encontré ese lugar. Prueba con otro nombre o toca el punto en el mapa.", 6000);
+      toast("No encontré ese lugar. Prueba con otro nombre o toca el punto en el mapa." + (notaPlaca ? " " + notaPlaca : ""), 8000);
       return;
     }
     toast("");
+    if (notaPlaca) {
+      var nl = document.createElement("li"); nl.className = "nota"; nl.textContent = notaPlaca;
+      nl.style.cssText = "padding:10px 14px;font-size:0.8rem;color:var(--muted)";
+      setTimeout(function () { ul.appendChild(nl); }, 0);
+    }
     items.forEach(function (it) {
       var li = document.createElement("li"), b = document.createElement("button");
       b.type = "button";
@@ -1230,8 +1267,8 @@
   function consultaOficial(b) {
     var url = CATASTRO + "/query?where=1%3D1&geometry=" + [b[1], b[0], b[3], b[2]].map(function (x) { return x.toFixed(6); }).join(",") +
       "&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=OBJECTID&outSR=4326" +
-      "&maxAllowableOffset=0.00003&geometryPrecision=6&resultRecordCount=1000&f=geojson";
-    return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); }).then(function (j) {
+      "&maxAllowableOffset=0.00003&geometryPrecision=6&resultRecordCount=1000";
+    return consultaArcgis(url).then(function (j) {
       var out = [];
       (j.features || []).forEach(function (f) {
         var g = f.geometry; if (!g) return;
