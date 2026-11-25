@@ -1,6 +1,6 @@
 // Service worker de Ruta Legal: deja la app abrir sin internet (pantalla de la bici y reglas).
 // El mapa, las ciclorrutas y las rutas siempre necesitan internet.
-var CACHE = "ruta-legal-v3";
+var CACHE = "ruta-legal-v4";
 var BASE = ["./", "index.html", "manifest.webmanifest", "reglas/colombia.json", "icon-192.png", "icon-512.png", "bici-marcador.png"];
 
 self.addEventListener("install", function (e) {
@@ -44,8 +44,9 @@ self.addEventListener("fetch", function (e) {
     return;
   }
 
-  // Leaflet y las fuentes: primero el caché.
-  var libreria = url.hostname === "cdnjs.cloudflare.com" && url.pathname.indexOf("/leaflet/") !== -1;
+  // Leaflet, MapLibre y las fuentes: primero el caché.
+  var libreria = (url.hostname === "cdnjs.cloudflare.com" && url.pathname.indexOf("/leaflet/") !== -1) ||
+    ((url.hostname === "unpkg.com" || url.hostname === "cdn.jsdelivr.net") && url.pathname.indexOf("maplibre-gl") !== -1);
   var fuente = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
   if (libreria || fuente) {
     e.respondWith(
