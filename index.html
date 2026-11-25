@@ -1036,6 +1036,42 @@
       });
   }
 
+  // Placas domiciliarias oficiales (Catastro de Bogotá, capa "Placa Domiciliaria").
+  // En esa capa la vía es p. ej. "CL 27 S" o "KR 12F" y el texto es "cruce puerta [S]", p. ej. "12D 33" o "27 26 S".
+  var PLACAS = "https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/Mapa_Referencia/Mapa_Referencia/MapServer/34";
+  var SIGLAS = { "avenida calle": "AC", "avenida carrera": "AK", calle: "CL", carrera: "KR", diagonal: "DG", transversal: "TV" };
+
+  function buscarPlaca(q) {
+    var l = limpiarDireccion(q);
+    var m = /^(Avenida Calle|Avenida Carrera|Calle|Carrera|Diagonal|Transversal)\s+(\d+\s?[A-Za-z]?)(\s+Bis)?(?:\s+(Sur|Este))?\s+(\d+\s?[A-Za-z]?)\s*[- ]\s*(\d+)(?:\s+(Sur|Este))?$/i.exec(l);
+    if (!m) return Promise.resolve([]);
+    var tipo = m[1].toLowerCase(), sigla = SIGLAS[tipo];
+    var n1 = m[2].replace(/\s/g, "").toUpperCase() + (m[3] ? "BIS" : "");
+    var cruce = m[5].replace(/\s/g, "").toUpperCase(), puerta = parseInt(m[6], 10);
+    var cuad = (m[4] || m[7] || "").toUpperCase().charAt(0);
+    var esCalle = /calle|diagonal/.test(tipo);
+    var via = sigla + " " + n1 + (esCalle && cuad ? " " + cuad : "");
+    var texto = cruce + " %" + (!esCalle && cuad ? " " + cuad : "");
+    var where = "PDONVIAL='" + via + "' AND PDOTEXTO LIKE '" + texto + "'";
+    var url = PLACAS + "/query?where=" + encodeURIComponent(where) + "&outFields=PDOTEXTO,PDONVIAL&outSR=4326&geometryPrecision=6&resultRecordCount=300&f=geojson";
+    return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); }).then(function (j) {
+      var mejor = null, dm = 1e9;
+      (j.features || []).forEach(function (f) {
+        if (!f.geometry || !f.properties) return;
+        var n = parseInt((f.properties.PDOTEXTO || "").split(" ")[1], 10);
+        if (isNaN(n)) return;
+        var d = Math.abs(n - puerta) * 2 + ((n % 2) === (puerta % 2) ? 0 : 1);
+        if (d < dm) { dm = d; mejor = { f: f, n: n }; }
+      });
+      if (!mejor) return [];
+      var c = mejor.f.geometry.coordinates;
+      var nombre = m[1].replace(/\b\w/g, function (x) { return x.toUpperCase(); }) + " " + n1.replace(/BIS$/, " Bis") + (cuad === "S" && esCalle ? " Sur" : "") +
+        " # " + cruce + "-" + mejor.n + (cuad === "S" && !esCalle ? " Sur" : "");
+      return [{ lat: c[1], lon: c[0], nombre: nombre,
+        sub: mejor.n === puerta ? "Placa oficial del Catastro de Bogotá" : "Placa más cercana a la que buscas (" + puerta + "), del Catastro de Bogotá" }];
+    }).catch(function () { return []; });
+  }
+
   // Direcciones de Bogotá "Calle 33 Sur # 18A-27": la calle es la 33 Sur, el cruce más cercano es la carrera 18A
   // y el 27 son los metros desde esa esquina. OpenStreetMap casi nunca trae el número de la puerta,
   // pero sí las calles, así que buscamos la ESQUINA (punto donde se cruzan las dos vías).
@@ -1089,8 +1125,8 @@
     toast("Buscando...", 8000);
     var fallas = [];
     function seguro(nombre, p) { return p.catch(function (e) { fallas.push(nombre + ": " + ((e && e.message) || "sin respuesta")); return null; }); }
-    Promise.all([buscarLupap(q), seguro("Nominatim", buscarNominatim(q)), seguro("Photon", buscarPhoton(q)), buscarEsquina(q)]).then(function (res) {
-      var items = res[3].concat(res[0]);
+    Promise.all([buscarLupap(q), seguro("Nominatim", buscarNominatim(q)), seguro("Photon", buscarPhoton(q)), buscarEsquina(q), buscarPlaca(q)]).then(function (res) {
+      var items = (res[4].length ? res[4] : res[3]).concat(res[0]);
       [res[1], res[2]].forEach(function (lista) {
         (lista || []).forEach(function (n) {
           var repetido = items.some(function (x) { return metros([x.lat, x.lon], [n.lat, n.lon]) < 40; });
