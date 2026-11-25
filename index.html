@@ -551,7 +551,7 @@
     <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
     <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
-    <p class="leyenda">Línea gruesa: ciclorruta separada. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección.</p>
+    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección.</p>
   </div>
 
   <div class="ov ov-bottom">
@@ -1036,6 +1036,36 @@
       });
   }
 
+  // Direcciones de Bogotá "Calle 33 Sur # 18A-27": la calle es la 33 Sur, el cruce más cercano es la carrera 18A
+  // y el 27 son los metros desde esa esquina. OpenStreetMap casi nunca trae el número de la puerta,
+  // pero sí las calles, así que buscamos la ESQUINA (punto donde se cruzan las dos vías).
+  function buscarEsquina(q) {
+    var l = limpiarDireccion(q);
+    var m = /^(Avenida Calle|Avenida Carrera|Calle|Carrera)\s+(\d+\s?[A-Za-z]?)(?:\s+(Sur|Este))?\s+(\d+\s?[A-Za-z]?)\s*[- ]\s*(\d+)$/i.exec(l);
+    if (!m) return Promise.resolve([]);
+    var esCalle = /calle/i.test(m[1]);
+    var n1 = m[2].replace(/\s/g, "").toUpperCase(), n2 = m[4].replace(/\s/g, "").toUpperCase();
+    var tipo1 = esCalle ? "Calle" : "Carrera", tipo2 = esCalle ? "Carrera" : "Calle";
+    var nombre1 = tipo1 + " " + n1 + (m[3] ? " " + m[3].charAt(0).toUpperCase() + m[3].slice(1).toLowerCase() : "");
+    var re1 = "^(Avenida )?" + nombre1 + "$";
+    var re2 = "^(Avenida )?" + tipo2 + " " + n2 + (esCalle ? "" : "( Sur| Este)?") + "$";
+    var bb = "(4.45,-74.25,4.85,-73.99)";
+    var q2 = "[out:json][timeout:20];" +
+      'way["highway"]["name"~"' + re1 + '",i]' + bb + "->.a;" +
+      'way["highway"]["name"~"' + re2 + '",i]' + bb + "->.b;" +
+      "node(w.a)(w.b);out 6;";
+    var metros27 = m[5];
+    return pedir(q2, 0).then(function (j) {
+      return (j.elements || []).slice(0, 3).map(function (n) {
+        return {
+          lat: n.lat, lon: n.lon,
+          nombre: "Esquina " + nombre1 + " con " + tipo2 + " " + n2,
+          sub: "Tu dirección queda a unos " + metros27 + " m de esta esquina"
+        };
+      });
+    }).catch(function () { return []; });
+  }
+
   // Segundo buscador (Photon, también basado en OpenStreetMap) por si Nominatim falla o no encuentra.
   function buscarPhoton(q) {
     var l = limpiarDireccion(q);
@@ -1059,8 +1089,8 @@
     toast("Buscando...", 8000);
     var fallas = [];
     function seguro(nombre, p) { return p.catch(function (e) { fallas.push(nombre + ": " + ((e && e.message) || "sin respuesta")); return null; }); }
-    Promise.all([buscarLupap(q), seguro("Nominatim", buscarNominatim(q)), seguro("Photon", buscarPhoton(q))]).then(function (res) {
-      var items = res[0].slice();
+    Promise.all([buscarLupap(q), seguro("Nominatim", buscarNominatim(q)), seguro("Photon", buscarPhoton(q)), buscarEsquina(q)]).then(function (res) {
+      var items = res[3].concat(res[0]);
       [res[1], res[2]].forEach(function (lista) {
         (lista || []).forEach(function (n) {
           var repetido = items.some(function (x) { return metros([x.lat, x.lon], [n.lat, n.lon]) < 40; });
@@ -1158,11 +1188,38 @@
       ");out geom;";
   }
 
+  // Segunda fuente: capa oficial "Cicloruta" del Catastro de Bogotá (polígonos). Completa lo que falte en OpenStreetMap.
+  var CATASTRO = "https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/Mapa_Referencia/Mapa_Referencia/MapServer/18";
+
+  function consultaOficial(b) {
+    var url = CATASTRO + "/query?where=1%3D1&geometry=" + [b[1], b[0], b[3], b[2]].map(function (x) { return x.toFixed(6); }).join(",") +
+      "&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=OBJECTID&outSR=4326" +
+      "&maxAllowableOffset=0.00003&geometryPrecision=6&resultRecordCount=1000&f=geojson";
+    return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); }).then(function (j) {
+      var out = [];
+      (j.features || []).forEach(function (f) {
+        var g = f.geometry; if (!g) return;
+        var polys = g.type === "Polygon" ? [g.coordinates] : (g.type === "MultiPolygon" ? g.coordinates : []);
+        polys.forEach(function (pl) {
+          if (!pl[0] || pl[0].length < 3) return;
+          out.push({ oficial: true, tags: { highway: "cycleway", name: "Ciclorruta (catastro)" },
+            geometry: pl[0].map(function (c) { return { lat: c[1], lon: c[0] }; }) });
+        });
+      });
+      return out;
+    });
+  }
+
   function consultaCiclo(b) {
     var bb = b.map(function (x) { return x.toFixed(5); }).join(",");
-    return pedir(armarConsulta(bb), 0).then(function (j) {
+    var osm = pedir(armarConsulta(bb), 0).then(function (j) {
       var els = (j && j.elements) || [];
       return els.length > MAX_TRAMOS ? els.slice(0, MAX_TRAMOS) : els;
+    }).catch(function () { return null; });
+    var ofi = consultaOficial(b).catch(function () { return null; });
+    return Promise.all([osm, ofi]).then(function (r) {
+      if (r[0] === null && r[1] === null) return Promise.reject(new Error("sin datos"));
+      return (r[0] || []).concat(r[1] || []);
     });
   }
 
@@ -1224,6 +1281,14 @@
       if (!w.geometry || w.geometry.length < 2) return;
       var t = w.tags || {};
       var dedicada = t.highway === "cycleway";
+      if (w.oficial) {
+        var area = L.polygon(w.geometry.map(function (g) { return [g.lat, g.lon]; }), {
+          color: color, weight: 1, fillColor: color, fillOpacity: 0.55, bubblingMouseEvents: false
+        });
+        area.bindPopup(function () { return detalle(t, true); });
+        capaCiclo.addLayer(area);
+        return;
+      }
       var linea = L.polyline(w.geometry.map(function (g) { return [g.lat, g.lon]; }), {
         color: color, weight: dedicada ? 5 : 3, opacity: 0.9, dashArray: dedicada ? null : "6 6", bubblingMouseEvents: false
       });
