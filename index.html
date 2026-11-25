@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<script>try{var t=localStorage.getItem("ruta-legal-tema");if(t==="claro")document.documentElement.setAttribute("data-theme","light");else if(t==="oscuro")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
+<script>try{var t=localStorage.getItem("ruta-legal-tema");if(t==="claro")document.documentElement.setAttribute("data-theme","light");else if(t==="oscuro")document.documentElement.setAttribute("data-theme","dark");else if(t==="hora"){var h=new Date().getHours()+new Date().getMinutes()/60;document.documentElement.setAttribute("data-theme",(h>=18||h<5.5)?"dark":"light")}}catch(e){}</script>
 <title>Ruta Legal</title>
 <meta name="theme-color" content="#0E6B58">
 <meta name="mobile-web-app-capable" content="yes">
@@ -346,6 +346,9 @@
   .sheet-head .icon-btn { margin: -6px -8px 0 0; background: var(--bg); width: 36px; height: 36px; }
   .actions { display: flex; gap: 10px; }
   .actions .btn { flex: 1; min-width: 0; }
+  .actions .btn.guardar { flex: none; padding-left: 16px; padding-right: 16px; font-size: 1.3rem; line-height: 1; }
+  .results li.fila { display: flex; align-items: center; }
+  .results li.fila .del { flex: none; width: 40px; align-items: center; padding: 10px 0; color: var(--muted); }
   .sheet details { font-size: 0.9rem; }
   .sheet summary { cursor: pointer; font-weight: 600; color: var(--accent); }
   .sheet ol { margin: 8px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
@@ -427,6 +430,7 @@
         <button type="button" data-tema="auto" aria-pressed="true">Auto</button>
         <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
         <button type="button" data-tema="oscuro" aria-pressed="false">Oscuro</button>
+      <button type="button" data-tema="hora" aria-pressed="false">Por hora</button>
       </div>
     </div>
   </header>
@@ -542,6 +546,7 @@
       <button type="button" data-tema="auto" aria-pressed="true">Auto</button>
       <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
       <button type="button" data-tema="oscuro" aria-pressed="false">Oscuro</button>
+      <button type="button" data-tema="hora" aria-pressed="false">Por hora</button>
       </div></div>
     <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
@@ -577,6 +582,7 @@
       <div class="actions">
         <button class="btn" id="btn-ir" type="button">Cómo llegar</button>
         <button class="btn sec" id="btn-salir-aqui" type="button">Salir de aquí</button>
+        <button class="btn sec guardar" id="btn-guardar" type="button" aria-label="Guardar sitio">☆</button>
       </div>
     </section>
 
@@ -842,6 +848,8 @@
     $("q").addEventListener("input", function () { $("btn-limpiar").hidden = !$("q").value; });
     $("btn-limpiar").addEventListener("click", function () { $("q").value = ""; $("btn-limpiar").hidden = true; $("resultados").hidden = true; $("q").focus(); });
     $("btn-ubicacion").addEventListener("click", ubicar);
+    $("btn-guardar").addEventListener("click", alGuardar);
+    $("q").addEventListener("focus", function () { if (!$("q").value.trim()) mostrarSitios(); });
     $("btn-zmas").addEventListener("click", function () { mapa.zoomIn(); });
     $("btn-zmenos").addEventListener("click", function () { mapa.zoomOut(); });
     $("btn-ciclo").addEventListener("click", function () {
@@ -904,11 +912,63 @@
     $("lugar-nombre").textContent = lugar.nombre;
     $("lugar-sub").textContent = sub || (ll[0].toFixed(5) + ", " + ll[1].toFixed(5));
     $("btn-salir-aqui").textContent = origen ? "Cambiar salida" : "Salir de aquí";
+    pintarGuardar();
     capaRuta.clearLayers();
     rutaPts = []; rutaMan = []; rutaDest = null; idRuta++;
     setEstado("lugar");
     dibujarMarcadores();
     if (!nombre) nombreDe(ll);
+  }
+
+  // ----- Sitios guardados (solo en este teléfono) -----
+  var SITIOS_KEY = "ruta-legal-sitios";
+  function leerSitios() {
+    try { var a = JSON.parse(localStorage.getItem(SITIOS_KEY) || "[]"); return Array.isArray(a) ? a : []; } catch (e) { return []; }
+  }
+  function escribirSitios(a) { try { localStorage.setItem(SITIOS_KEY, JSON.stringify(a)); } catch (e) {} }
+  function indiceSitio(ll) {
+    var a = leerSitios();
+    for (var i = 0; i < a.length; i++) if (metros([a[i].lat, a[i].lon], ll) < 25) return i;
+    return -1;
+  }
+  function pintarGuardar() {
+    var g = lugar && indiceSitio(lugar.ll) >= 0;
+    $("btn-guardar").textContent = g ? "★" : "☆";
+    $("btn-guardar").setAttribute("aria-label", g ? "Quitar de sitios guardados" : "Guardar sitio");
+  }
+  function alGuardar() {
+    if (!lugar) return;
+    var a = leerSitios(), i = indiceSitio(lugar.ll);
+    if (i >= 0) { a.splice(i, 1); }
+    else {
+      var n = lugar.nombre;
+      try { var r = window.prompt("Nombre para este sitio", lugar.nombre); if (r === null) return; if (r.trim()) n = r.trim(); } catch (e) {}
+      a.unshift({ n: n, lat: lugar.ll[0], lon: lugar.ll[1] });
+    }
+    escribirSitios(a);
+    pintarGuardar();
+    toast(i >= 0 ? "Sitio quitado." : "Sitio guardado.", 2500);
+  }
+  function mostrarSitios() {
+    var a = leerSitios(), ul = $("resultados");
+    if (!a.length) return;
+    ul.innerHTML = "";
+    a.forEach(function (it, idx) {
+      var li = document.createElement("li"); li.className = "fila";
+      var b = document.createElement("button"); b.type = "button";
+      var t = document.createElement("span"); t.className = "t"; t.textContent = "★ " + it.n;
+      var sp = document.createElement("span"); sp.className = "s"; sp.textContent = "Sitio guardado";
+      b.appendChild(t); b.appendChild(sp);
+      b.style.flex = "1"; b.style.minWidth = "0";
+      b.addEventListener("click", function () {
+        ul.hidden = true; $("q").blur();
+        var ll = [it.lat, it.lon]; mapa.setView(ll, 17); seleccionarLugar(ll, it.n, "Sitio guardado");
+      });
+      var d = document.createElement("button"); d.type = "button"; d.className = "del"; d.textContent = "✕"; d.setAttribute("aria-label", "Borrar " + it.n);
+      d.addEventListener("click", function () { var x = leerSitios(); x.splice(idx, 1); escribirSitios(x); if (x.length) mostrarSitios(); else ul.hidden = true; });
+      li.appendChild(b); li.appendChild(d); ul.appendChild(li);
+    });
+    ul.hidden = false;
   }
 
   function nombreDe(ll) {
@@ -1291,13 +1351,30 @@
   }
 
   // Cuánto falta por la ruta y qué tan lejos estás de ella.
+  function proyectar(p, a, b) {
+    var k = 111320, c = Math.cos(p[0] * Math.PI / 180);
+    var ax = (a[1] - p[1]) * k * c, ay = (a[0] - p[0]) * k, bx = (b[1] - p[1]) * k * c, by = (b[0] - p[0]) * k;
+    var dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy;
+    var t = l2 ? Math.max(0, Math.min(1, -(ax * dx + ay * dy) / l2)) : 0;
+    return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t];
+  }
+
+  function rumboSeg(a, b) {
+    var dy = b[0] - a[0], dx = (b[1] - a[1]) * Math.cos(a[0] * Math.PI / 180);
+    return (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+  }
+
   function progreso(ll) {
     var mejor = 0, md = 1e9, along = 0;
     for (var i = 0; i < rutaPts.length - 1; i++) {
       var d = distSeg(ll, rutaPts[i], rutaPts[i + 1]);
       if (d < md) { md = d; mejor = i; along = Math.min(metros(rutaPts[i], ll), rutaAcum[i + 1] - rutaAcum[i]); }
     }
-    return { resto: Math.max(0, rutaInfo.total - rutaAcum[mejor] - along), desvio: md };
+    var sig = rutaPts[Math.min(mejor + 1, rutaPts.length - 1)];
+    return {
+      resto: Math.max(0, rutaInfo.total - rutaAcum[mejor] - along), desvio: md,
+      punto: proyectar(ll, rutaPts[mejor], sig), rumbo: rutaPts[mejor] !== sig ? rumboSeg(rutaPts[mejor], sig) : null
+    };
   }
 
   function hablar(t) {
@@ -1402,8 +1479,8 @@
     }
 
     // Si te sales de la ruta, la recalcula desde donde estás.
-    if (pr.desvio > 60) fueraRuta++; else fueraRuta = 0;
-    if (fueraRuta >= 4 && rutaDest && Date.now() - ultRecalc > 15000) {
+    if (pr.desvio > 50) fueraRuta++; else fueraRuta = 0;
+    if (fueraRuta >= 2 && rutaDest && Date.now() - ultRecalc > 8000) {
       ultRecalc = Date.now();
       fueraRuta = 0;
       toast("Te saliste de la ruta. Recalculando...", 3000);
@@ -1427,6 +1504,13 @@
     }).then(function () { navCargando = false; });
   }
 
+  var zoomObj = 17, zoomVotos = 0;
+  function seguir(ll, kmh) {
+    var obj = kmh < 12 ? 18 : (kmh < 26 ? 17 : 16);
+    if (obj !== zoomObj) { if (++zoomVotos >= 3) { zoomObj = obj; zoomVotos = 0; } } else zoomVotos = 0;
+    if (mapa.getZoom() !== zoomObj) mapa.setView(ll, zoomObj); else mapa.panTo(ll);
+  }
+
   function alPosicion(pos) {
     var ll = [pos.coords.latitude, pos.coords.longitude];
     var t = pos.timestamp || Date.now();
@@ -1439,8 +1523,17 @@
     }
     if (kmh < 0.5) kmh = 0;
     navUlt = { ll: ll, t: t };
-    mostrarYo(pos);
-    if ($("chk-sigue").checked) mapa.panTo(ll);
+    var vista = ll, posVista = pos;
+    if (rutaPts.length && rutaInfo) {
+      var pj = progreso(ll);
+      if (pj.desvio < 25) {
+        vista = pj.punto;
+        posVista = { coords: { latitude: vista[0], longitude: vista[1], accuracy: pos.coords.accuracy, speed: pos.coords.speed, heading: pj.rumbo !== null ? pj.rumbo : pos.coords.heading } };
+        if (pj.rumbo !== null) posVista.coords.speed = Math.max(2, pos.coords.speed || 0);
+      }
+    }
+    mostrarYo(posVista);
+    if ($("chk-sigue").checked) seguir(vista, kmh);
     if ((navCentro && metros(navCentro, ll) > 600) || (!navCentro && Date.now() >= navEspera)) cargarAlrededor(ll);
     evaluarVelocidad(ll, kmh, pos.coords.accuracy);
     avanzarRuta(ll);
@@ -1452,7 +1545,7 @@
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume();
     } catch (e) {}
-    navCentro = null; navEspera = 0; llego = false; fueraRuta = 0; ultRecalc = 0;
+    navCentro = null; navEspera = 0; llego = false; fueraRuta = 0; ultRecalc = 0; zoomObj = 17; zoomVotos = 0;
     ultAlerta = { tipo: "", tBip: 0, tVoz: 0 };
     setEstado("guia");
     dibujarMarcadores();
@@ -1483,11 +1576,22 @@
   // ===== TEMA =====
   var TEMA_KEY = "ruta-legal-tema";
 
+  var temaActual = "auto";
+  function esNoche() {
+    var d = new Date(), h = d.getHours() + d.getMinutes() / 60;
+    return h >= 18 || h < 5.5;
+  }
+  setInterval(function () {
+    if (temaActual === "hora") aplicarTema("hora", false);
+  }, 60000);
+
   function aplicarTema(m, guardar) {
     var r = document.documentElement;
     if (m === "claro") r.setAttribute("data-theme", "light");
     else if (m === "oscuro") r.setAttribute("data-theme", "dark");
+    else if (m === "hora") r.setAttribute("data-theme", esNoche() ? "dark" : "light");
     else { r.removeAttribute("data-theme"); m = "auto"; }
+    temaActual = m;
     if (guardar) { try { localStorage.setItem(TEMA_KEY, m); } catch (e) {} }
     document.querySelectorAll("[data-tema]").forEach(function (b) {
       b.setAttribute("aria-pressed", b.dataset.tema === m ? "true" : "false");
