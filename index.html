@@ -1150,24 +1150,42 @@
       });
   }
 
+  var busquedaId = 0;
+  function conTiempo(p, ms) {
+    return Promise.race([p, new Promise(function (_, rej) { setTimeout(function () { rej(new Error("tardó demasiado")); }, ms); })]);
+  }
+
+  // Cada buscador responde por su cuenta: los resultados se van mostrando apenas llegan, sin esperar al más lento.
   function buscar(ev) {
     ev.preventDefault();
     var q = $("q").value.trim();
     if (q.length < 3) { toast("Escribe al menos 3 letras."); return; }
-    toast("Buscando...", 8000);
-    var fallas = [];
-    function seguro(nombre, p) { return p.catch(function (e) { fallas.push(nombre + ": " + ((e && e.message) || "sin respuesta")); return null; }); }
-    Promise.all([buscarLupap(q), seguro("Nominatim", buscarNominatim(q)), seguro("Photon", buscarPhoton(q)), buscarEsquina(q), buscarPlaca(q)]).then(function (res) {
-      var items = (res[4].length ? res[4] : res[3]).concat(res[0]);
-      [res[1], res[2]].forEach(function (lista) {
+    var id = ++busquedaId;
+    toast("Buscando...", 60000);
+    $("resultados").hidden = true;
+    var R = { lupap: null, nom: null, pho: null, esq: null, pla: null }, pend = 5, fallas = [];
+    function pintar() {
+      var items = [];
+      if (R.pla !== null) items = (R.pla.length ? R.pla : (R.esq || [])).slice();
+      (R.lupap || []).forEach(function (n) { items.push(n); });
+      [R.nom, R.pho].forEach(function (lista) {
         (lista || []).forEach(function (n) {
           var repetido = items.some(function (x) { return metros([x.lat, x.lon], [n.lat, n.lon]) < 40; });
           if (!repetido) items.push(n);
         });
       });
-      if (!items.length && fallas.length === 2) { toast("No pude buscar ahora (" + fallas.join("; ") + "). Revisa tu conexión e intenta de nuevo.", 9000); return; }
-      mostrarResultados(items);
-    });
+      if (items.length) { mostrarResultados(items); if (pend > 0) { var li = document.createElement("li"); li.className = "nota"; li.textContent = "Buscando más resultados..."; li.style.cssText = "padding:10px 14px;font-size:0.8rem;color:var(--muted)"; $("resultados").appendChild(li); } return; }
+      if (pend > 0) return;
+      if (fallas.length >= 2) { toast("No pude buscar ahora (" + fallas.join("; ") + "). Revisa tu conexión e intenta de nuevo.", 9000); return; }
+      mostrarResultados([]);
+    }
+    function listo(k, v) { if (id !== busquedaId) return; R[k] = v || []; pend--; pintar(); }
+    function falla(k, nombre) { return function (e) { fallas.push(nombre + ": " + ((e && e.message) || "sin respuesta")); listo(k, []); }; }
+    buscarLupap(q).then(function (v) { listo("lupap", v); }, falla("lupap", "Lupap"));
+    conTiempo(buscarNominatim(q), 10000).then(function (v) { listo("nom", v); }, falla("nom", "Nominatim"));
+    conTiempo(buscarPhoton(q), 10000).then(function (v) { listo("pho", v); }, falla("pho", "Photon"));
+    conTiempo(buscarEsquina(q), 12000).then(function (v) { listo("esq", v); }, function () { listo("esq", []); });
+    conTiempo(buscarPlaca(q), 12000).then(function (v) { listo("pla", v); }, function () { listo("pla", []); });
   }
 
   function mostrarResultados(items) {
