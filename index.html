@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<script>try{var t=localStorage.getItem("ruta-legal-tema");if(t==="claro")document.documentElement.setAttribute("data-theme","light");else if(t==="oscuro")document.documentElement.setAttribute("data-theme","dark")}catch(e){}</script>
 <title>Ruta Legal</title>
 <meta name="theme-color" content="#0E6B58">
 <meta name="mobile-web-app-capable" content="yes">
@@ -22,6 +23,7 @@
     --line: #D5DDD8;
     --accent: #0E6B58;
     --accent-fg: #FFFFFF;
+    --nav: #1E88E5;
     --ok: #0B5E4D;
     --ok-bg: #DDF1EA;
     --warn: #7D4305;
@@ -29,6 +31,7 @@
     --no: #9C2418;
     --no-bg: #FADFDA;
     --tile-filter: none;
+    color-scheme: light;
     --shadow: 0 2px 10px rgb(0 0 0 / 0.22);
     --ok-dot: #1E9E7A;
     --warn-dot: #E0A12F;
@@ -216,6 +219,16 @@
   .cta-in { max-width: 600px; margin: 0 auto; }
   .top { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 
+  .top-acciones { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+  .temas { display: inline-flex; gap: 2px; padding: 3px; background: var(--bg); border: 1px solid var(--line); border-radius: 999px; }
+  .temas button {
+    font: inherit; font-size: 0.8rem; font-weight: 600; cursor: pointer; border: 0; border-radius: 999px;
+    padding: 6px 12px; background: transparent; color: var(--muted);
+  }
+  .temas button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
+  .temas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .fila-tema { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; }
+  .ajustes .temas { background: var(--bg); }
   body.en-mapa { overflow: hidden; }
   #vista-mapa { position: fixed; inset: 0; z-index: 1; background: var(--bg); overflow: hidden; }
   #mapa { position: absolute; inset: 0; z-index: 0; background: var(--bg); }
@@ -315,7 +328,6 @@
 
   .row-fab { display: flex; justify-content: flex-end; align-items: flex-end; gap: 12px; pointer-events: none; }
   .row-fab > * { pointer-events: auto; }
-  .row-fab .speedo { margin-right: auto; }
 
   .toast {
     align-self: center; margin: 0; max-width: 94%; text-align: center;
@@ -337,35 +349,53 @@
   .sheet details { font-size: 0.9rem; }
   .sheet summary { cursor: pointer; font-weight: 600; color: var(--accent); }
   .sheet ol { margin: 8px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
-  .sheet-guia { flex-direction: row; align-items: center; flex-wrap: wrap; }
-  .sheet-guia > div { flex: 1; min-width: 0; }
-  .sheet-guia .big { font-family: var(--font-display); font-weight: 700; font-size: 1.6rem; line-height: 1.1; }
-  .sheet-guia .info { flex-basis: 100%; margin: 0; font-size: 0.82rem; color: var(--muted); }
+  .sheet-guia { display: grid; grid-template-columns: 1fr 1.3fr 1fr; align-items: center; gap: 6px; padding: 14px 16px 18px; position: relative; overflow: hidden; }
+  .sheet-guia .stat { text-align: center; min-width: 0; }
+  .sheet-guia .n { font-family: var(--font-display); font-weight: 700; font-size: 1.9rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
+  .sheet-guia .u { font-size: 0.85rem; color: var(--muted); font-weight: 500; }
+  .sheet-guia .mid .n { color: var(--nav); }
+  .sheet-guia .btn { justify-self: center; padding-left: 16px; padding-right: 16px; }
+  .sheet-guia .info { grid-column: 1 / -1; margin: 0; font-size: 0.82rem; color: var(--muted); text-align: center; }
   .sheet-guia .info:empty { display: none; }
-
+  .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 5px; background: var(--line); }
+  .prog i { display: block; height: 100%; width: 0; background: var(--nav); transition: width 0.4s; }
+  .guia-calle {
+    margin: 0; padding: 12px 18px; text-align: center; background: var(--surface); color: var(--fg);
+    border-radius: 16px; box-shadow: var(--shadow); font-family: var(--font-display); font-weight: 600; font-size: 1.1rem;
+    line-height: 1.25; overflow-wrap: anywhere;
+  }
+  .guia-calle:empty { display: none; }
+  .guia-fila { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; pointer-events: none; }
+  .guia-fila > * { pointer-events: auto; }
+  .turn {
+    width: 116px; padding: 10px 8px 8px; display: flex; flex-direction: column; align-items: center; gap: 4px;
+    background: var(--nav); color: #fff; border-radius: 18px; box-shadow: var(--shadow);
+  }
+  .turn-ico { width: 64px; height: 64px; display: grid; place-items: center; }
+  .turn-ico svg { width: 62px; height: 62px; fill: none; stroke: currentColor; stroke-width: 2.6; stroke-linecap: round; stroke-linejoin: round; }
+  .turn-dist { font-family: var(--font-display); font-weight: 700; font-size: 1.45rem; line-height: 1.05; font-variant-numeric: tabular-nums; }
   .speedo {
-    display: flex; align-items: center; gap: 10px; padding: 8px 14px 8px 8px;
-    background: var(--surface); border-radius: 22px; box-shadow: var(--shadow);
+    margin-left: auto; min-width: 96px; padding: 8px 12px 10px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+    background: var(--surface); border-radius: 18px; box-shadow: var(--shadow);
   }
+  .speed-now { font-family: var(--font-display); font-weight: 700; font-size: 2.7rem; line-height: 0.95; font-variant-numeric: tabular-nums; text-align: center; }
+  .speed-now small { display: block; font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-top: 2px; }
+  .lim { display: flex; align-items: center; gap: 6px; }
   .sign {
-    width: 58px; height: 58px; flex: none; display: grid; place-items: center;
-    border-radius: 50%; background: #fff; color: #111; border: 6px solid #D32F2F;
-    font-family: var(--font-display); font-weight: 700; font-size: 1.4rem; font-variant-numeric: tabular-nums;
+    width: 34px; height: 34px; flex: none; display: grid; place-items: center;
+    border-radius: 50%; background: #fff; color: #111; border: 4px solid #D32F2F;
+    font-family: var(--font-display); font-weight: 700; font-size: 0.85rem; font-variant-numeric: tabular-nums;
   }
-  .speed-now { font-family: var(--font-display); font-weight: 700; font-size: 2.3rem; line-height: 1; font-variant-numeric: tabular-nums; }
-  .speed-now small { font-size: 0.8rem; font-weight: 500; color: var(--muted); margin-left: 3px; }
-  .where-now { font-size: 0.75rem; color: var(--muted); font-weight: 500; }
+  .where-now { font-size: 0.72rem; color: var(--muted); font-weight: 600; }
   .speedo.over { background: var(--no-bg); }
   .speedo.over .speed-now { color: var(--no); }
+  .col-fab { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .zoom { display: flex; flex-direction: column; gap: 10px; }
+  .zoom .fab svg { width: 26px; height: 26px; }
+  .yo-bici img { display: block; width: 100%; height: 100%; transform-origin: 50% 50%;
+    filter: drop-shadow(0 0 1.5px #fff) drop-shadow(0 0 3px #fff) drop-shadow(0 2px 3px rgb(0 0 0 / 0.35)); }
+  .yo-bici { background: none; border: 0; }
 
-  .turn {
-    display: flex; align-items: center; gap: 14px; padding: 12px 16px;
-    background: var(--accent); color: var(--accent-fg); border-radius: 22px; box-shadow: var(--shadow);
-  }
-  .turn-ico { flex: none; width: 46px; height: 46px; display: grid; place-items: center; }
-  .turn-ico svg { width: 44px; height: 44px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; stroke-linejoin: round; }
-  .turn-dist { font-family: var(--font-display); font-weight: 700; font-size: 1.7rem; line-height: 1.05; }
-  .turn-ins { font-size: 0.95rem; line-height: 1.3; }
   .alerta { padding: 12px 14px; border-radius: 16px; background: var(--no-bg); color: var(--no); font-weight: 600; margin: 0; box-shadow: var(--shadow); }
 
   @media (prefers-reduced-motion: no-preference) {
@@ -391,7 +421,14 @@
       <h1>Ruta Legal</h1>
       <p class="lead">Pon los datos de tu bici eléctrica, mira si puedes usar la ciclorruta y a qué velocidad, y luego abre el mapa para navegar.</p>
     </div>
-    <button class="btn sec" id="btn-instalar" type="button" hidden>Instalar en mi celular</button>
+    <div class="top-acciones">
+      <button class="btn sec" id="btn-instalar" type="button" hidden>Instalar en mi celular</button>
+      <div class="temas" role="group" aria-label="Tema de color">
+        <button type="button" data-tema="auto" aria-pressed="true">Auto</button>
+        <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
+        <button type="button" data-tema="oscuro" aria-pressed="false">Oscuro</button>
+      </div>
+    </div>
   </header>
 
   <section class="panel" aria-labelledby="t-bici">
@@ -477,11 +514,15 @@
   </div>
 
   <div class="ov ov-guia" id="top-guia" hidden>
-    <div class="turn" id="turn" hidden>
-      <div class="turn-ico" id="turn-ico"></div>
-      <div>
+    <p class="guia-calle" id="turn-ins"></p>
+    <div class="guia-fila">
+      <div class="turn" id="turn" hidden>
+        <div class="turn-ico" id="turn-ico"></div>
         <div class="turn-dist" id="turn-dist"></div>
-        <div class="turn-ins" id="turn-ins"></div>
+      </div>
+      <div class="speedo" id="speedo" hidden>
+        <div class="speed-now"><span id="hud-kmh-n">0</span><small>km/h</small></div>
+        <div class="lim"><div class="sign" id="sign" aria-label="Límite de velocidad"><span id="hud-lim-n">40</span></div><span class="where-now" id="hud-donde">Calle</span></div>
       </div>
     </div>
     <p class="alerta" id="hud-alerta" role="alert" hidden></p>
@@ -497,6 +538,11 @@
   </div>
 
   <div class="ajustes" id="ajustes" hidden>
+    <div class="fila-tema"><span>Tema</span><div class="temas" role="group" aria-label="Tema de color">
+      <button type="button" data-tema="auto" aria-pressed="true">Auto</button>
+      <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
+      <button type="button" data-tema="oscuro" aria-pressed="false">Oscuro</button>
+      </div></div>
     <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
     <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
@@ -507,16 +553,15 @@
     <p class="toast" id="toast" role="status" hidden></p>
 
     <div class="row-fab">
-      <div class="speedo" id="speedo" hidden>
-        <div class="sign" id="sign" aria-label="Límite de velocidad"><span id="hud-lim-n">40</span></div>
-        <div>
-          <div class="speed-now"><span id="hud-kmh-n">0</span><small>km/h</small></div>
-          <div class="where-now" id="hud-donde">Calle</div>
+      <div class="col-fab">
+        <div class="zoom">
+          <button class="fab" id="btn-zmas" type="button" aria-label="Acercar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+          <button class="fab" id="btn-zmenos" type="button" aria-label="Alejar"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
         </div>
+        <button class="fab" id="btn-ubicacion" type="button" aria-label="Mi ubicación">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22"/></svg>
+        </button>
       </div>
-      <button class="fab" id="btn-ubicacion" type="button" aria-label="Mi ubicación">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><circle cx="12" cy="12" r="7.5"/><path d="M12 2v2.5M12 19.5V22M2 12h2.5M19.5 12H22"/></svg>
-      </button>
     </div>
 
     <section class="sheet" id="card-lugar" hidden aria-label="Lugar elegido">
@@ -553,12 +598,11 @@
     </section>
 
     <section class="sheet sheet-guia" id="card-guia" hidden aria-label="Guía en marcha">
-      <div>
-        <div class="big" id="guia-eta">Guía activa</div>
-        <p class="sub" id="guia-dist"></p>
-      </div>
+      <div class="stat"><div class="n" id="guia-dist">–</div><div class="u" id="guia-dist-u">km</div></div>
+      <div class="stat mid"><div class="n" id="guia-eta">–</div><div class="u" id="guia-hora">min</div></div>
       <button class="btn stop" id="btn-terminar" type="button">Terminar</button>
       <p class="info" id="hud-info" aria-live="polite"></p>
+      <div class="prog" aria-hidden="true"><i id="guia-prog"></i></div>
     </section>
   </div>
 </main>
@@ -798,6 +842,8 @@
     $("q").addEventListener("input", function () { $("btn-limpiar").hidden = !$("q").value; });
     $("btn-limpiar").addEventListener("click", function () { $("q").value = ""; $("btn-limpiar").hidden = true; $("resultados").hidden = true; $("q").focus(); });
     $("btn-ubicacion").addEventListener("click", ubicar);
+    $("btn-zmas").addEventListener("click", function () { mapa.zoomIn(); });
+    $("btn-zmenos").addEventListener("click", function () { mapa.zoomOut(); });
     $("btn-ciclo").addEventListener("click", function () {
       cicloVisible = !cicloVisible;
       this.setAttribute("aria-pressed", cicloVisible ? "true" : "false");
@@ -883,42 +929,82 @@
   }
 
   // ----- Búsqueda de direcciones -----
+  // Lupap entiende las direcciones de Bogotá (Calle 26 # 13-19). Se activa si config.json trae una clave.
+  var LUPAP = { key: "" };
+
+  function buscarLupap(q) {
+    if (!LUPAP.key) return Promise.resolve([]);
+    return fetch("https://api.lupap.co/v2/co/bogota?a=" + encodeURIComponent(q) + "&key=" + encodeURIComponent(LUPAP.key))
+      .then(function (r) { return r.ok ? r.json() : null; })
+      .then(function (j) {
+        var f = j && j.response;
+        var feats = !f ? [] : (f.type === "FeatureCollection" ? (f.features || []) : (f.geometry ? [f] : []));
+        return feats.filter(function (x) { return x && x.geometry && x.geometry.coordinates; }).map(function (x) {
+          var p = x.properties || {};
+          var aprox = p.accuracy === "approximate" || p.accuracy === "partial_match";
+          var zona = [p.admin5, p.admin4].filter(Boolean).join(", ");
+          return {
+            lat: x.geometry.coordinates[1], lon: x.geometry.coordinates[0],
+            nombre: p.address || p.commonName || q,
+            sub: (zona || "Bogotá") + (aprox ? " · ubicación aproximada" : "")
+          };
+        });
+      })
+      .catch(function () { return []; });
+  }
+
+  function buscarNominatim(q) {
+    var base = NOMINATIM + "/search?format=jsonv2&addressdetails=1&limit=6&accept-language=es&countrycodes=co&q=";
+    function pedirBusqueda(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); }); }
+    var conCiudad = /bogot/i.test(q) ? q : q + ", Bogotá";
+    return pedirBusqueda(base + encodeURIComponent(conCiudad) + "&viewbox=" + VIEWBOX + "&bounded=1")
+      .then(function (r) { return r.length ? r : pedirBusqueda(base + encodeURIComponent(q)); })
+      .then(function (r) {
+        return r.map(function (it) {
+          var e = etiqueta(it);
+          return { lat: parseFloat(it.lat), lon: parseFloat(it.lon), nombre: e.nombre || it.display_name, sub: e.sub || it.display_name };
+        });
+      });
+  }
+
   function buscar(ev) {
     ev.preventDefault();
     var q = $("q").value.trim();
     if (q.length < 3) { toast("Escribe al menos 3 letras."); return; }
     toast("Buscando...", 8000);
-    var base = NOMINATIM + "/search?format=jsonv2&addressdetails=1&limit=6&accept-language=es&countrycodes=co&q=";
-    function pedirBusqueda(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); }); }
-    var conCiudad = /bogot/i.test(q) ? q : q + ", Bogotá";
-    pedirBusqueda(base + encodeURIComponent(conCiudad) + "&viewbox=" + VIEWBOX + "&bounded=1")
-      .then(function (r) { return r.length ? r : pedirBusqueda(base + encodeURIComponent(q)); })
-      .then(mostrarResultados)
-      .catch(function () { toast("No pude buscar ahora. Revisa tu conexión e intenta de nuevo."); });
+    Promise.all([buscarLupap(q), buscarNominatim(q).catch(function () { return null; })]).then(function (res) {
+      var lup = res[0], nom = res[1];
+      if (nom === null && !lup.length) { toast("No pude buscar ahora. Revisa tu conexión e intenta de nuevo."); return; }
+      var items = lup.slice();
+      (nom || []).forEach(function (n) {
+        var repetido = items.some(function (x) { return metros([x.lat, x.lon], [n.lat, n.lon]) < 40; });
+        if (!repetido) items.push(n);
+      });
+      mostrarResultados(items);
+    });
   }
 
-  function mostrarResultados(r) {
+  function mostrarResultados(items) {
     var ul = $("resultados");
     ul.innerHTML = "";
-    if (!r.length) {
+    if (!items.length) {
       ul.hidden = true;
       toast("No encontré ese lugar. Prueba con otro nombre o toca el punto en el mapa.", 6000);
       return;
     }
     toast("");
-    r.forEach(function (it) {
-      var e = etiqueta(it);
+    items.forEach(function (it) {
       var li = document.createElement("li"), b = document.createElement("button");
       b.type = "button";
-      var t = document.createElement("span"); t.className = "t"; t.textContent = e.nombre || it.display_name;
-      var s = document.createElement("span"); s.className = "s"; s.textContent = e.sub || it.display_name;
+      var t = document.createElement("span"); t.className = "t"; t.textContent = it.nombre;
+      var s = document.createElement("span"); s.className = "s"; s.textContent = it.sub;
       b.appendChild(t); b.appendChild(s);
       b.addEventListener("click", function () {
         ul.hidden = true;
         $("q").blur();
-        var ll = [parseFloat(it.lat), parseFloat(it.lon)];
+        var ll = [it.lat, it.lon];
         mapa.setView(ll, 17);
-        seleccionarLugar(ll, e.nombre || it.display_name, e.sub);
+        seleccionarLugar(ll, it.nombre, it.sub);
       });
       li.appendChild(b);
       ul.appendChild(li);
@@ -935,12 +1021,26 @@
     }, { enableHighAccuracy: true, timeout: 15000 });
   }
 
+  var rumboYo = 0, llYo = null;
   function mostrarYo(pos) {
     var ll = [pos.coords.latitude, pos.coords.longitude];
+    var h = pos.coords.heading, v = pos.coords.speed;
+    if (h !== null && h !== undefined && isFinite(h) && v > 1) rumboYo = h;
+    else if (llYo && metros(llYo, ll) > 4) {
+      var dy = ll[0] - llYo[0], dx = (ll[1] - llYo[1]) * Math.cos(ll[0] * Math.PI / 180);
+      rumboYo = (Math.atan2(dx, dy) * 180 / Math.PI + 360) % 360;
+    }
+    if (!llYo || metros(llYo, ll) > 4) llYo = ll;
     if (capaYo) mapa.removeLayer(capaYo);
     capaYo = L.layerGroup([
       L.circle(ll, { radius: pos.coords.accuracy, weight: 1, fillOpacity: 0.1 }),
-      L.circleMarker(ll, { radius: 8, weight: 3, color: "#ffffff", fillColor: "#1a73e8", fillOpacity: 1 })
+      L.marker(ll, {
+        interactive: false, keyboard: false, zIndexOffset: 1000,
+        icon: L.divIcon({
+          className: "yo-bici", iconSize: [32, 70], iconAnchor: [16, 35],
+          html: '<img src="bici-marcador.png" alt="" style="transform:rotate(' + Math.round(rumboYo) + 'deg)">'
+        })
+      })
     ]).addTo(mapa);
     return ll;
   }
@@ -1264,8 +1364,10 @@
     var turn = $("turn");
     if (!rutaMan.length || !rutaPts.length) {
       turn.hidden = true;
-      $("guia-eta").textContent = "Guía activa";
-      $("guia-dist").textContent = "Sin ruta: solo avisos de velocidad.";
+      $("turn-ins").textContent = "";
+      $("guia-eta").textContent = "–"; $("guia-hora").textContent = "Sin ruta";
+      $("guia-dist").textContent = "–"; $("guia-dist-u").textContent = "solo avisos";
+      $("guia-prog").style.width = "0";
       return;
     }
     var ult = rutaMan.length - 1;
@@ -1277,8 +1379,10 @@
     turn.hidden = false;
     var min = Math.max(1, Math.round(pr.resto / Math.max(1, rutaInfo.total) * rutaInfo.min));
     var hora = new Date(Date.now() + min * 60000).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
-    $("guia-eta").textContent = min + " min";
-    $("guia-dist").textContent = textoDistancia(pr.resto) + " · llegas " + hora;
+    var td = textoDistancia(pr.resto).split(" ");
+    $("guia-eta").textContent = min; $("guia-hora").textContent = "min · " + hora;
+    $("guia-dist").textContent = td[0]; $("guia-dist-u").textContent = td[1];
+    $("guia-prog").style.width = Math.max(0, Math.min(100, (1 - pr.resto / Math.max(1, rutaInfo.total)) * 100)) + "%";
 
     if (sigIdx === ult && d < 25) {
       $("turn-ico").innerHTML = ICONO.meta;
@@ -1352,9 +1456,10 @@
     ultAlerta = { tipo: "", tBip: 0, tVoz: 0 };
     setEstado("guia");
     dibujarMarcadores();
-    $("turn").hidden = true;
-    $("guia-eta").textContent = "Guía activa";
-    $("guia-dist").textContent = "Buscando señal de GPS...";
+    $("turn").hidden = true; $("turn-ins").textContent = "";
+    $("guia-eta").textContent = "–"; $("guia-hora").textContent = "Buscando GPS";
+    $("guia-dist").textContent = "–"; $("guia-dist-u").textContent = "km";
+    $("guia-prog").style.width = "0";
     msgGuia("");
     if (navUlt) mapa.setView(navUlt.ll, 17);
     navId = navigator.geolocation.watchPosition(alPosicion, function (err) {
@@ -1373,6 +1478,26 @@
     $("hud-alerta").hidden = true;
     msgGuia("");
     $("btn-ir-mapa").textContent = "Ir al mapa";
+  }
+
+  // ===== TEMA =====
+  var TEMA_KEY = "ruta-legal-tema";
+
+  function aplicarTema(m, guardar) {
+    var r = document.documentElement;
+    if (m === "claro") r.setAttribute("data-theme", "light");
+    else if (m === "oscuro") r.setAttribute("data-theme", "dark");
+    else { r.removeAttribute("data-theme"); m = "auto"; }
+    if (guardar) { try { localStorage.setItem(TEMA_KEY, m); } catch (e) {} }
+    document.querySelectorAll("[data-tema]").forEach(function (b) {
+      b.setAttribute("aria-pressed", b.dataset.tema === m ? "true" : "false");
+    });
+    try {
+      var bg = getComputedStyle(r).getPropertyValue("--bg").trim();
+      var meta = document.querySelector('meta[name="theme-color"]');
+      if (meta && bg) meta.setAttribute("content", bg);
+    } catch (e) {}
+    pintarCiclorrutas();
   }
 
   // ===== PANTALLAS =====
@@ -1424,16 +1549,25 @@
       instalar = null;
       $("btn-instalar").hidden = true;
     });
+    document.querySelectorAll("[data-tema]").forEach(function (b) {
+      b.addEventListener("click", function () { aplicarTema(b.dataset.tema, true); });
+    });
+    var guardado = "auto";
+    try { guardado = localStorage.getItem(TEMA_KEY) || "auto"; } catch (e) {}
+    aplicarTema(guardado, false);
     window.addEventListener("hashchange", porHash);
     render();
     porHash();
   }
 
-  fetch("reglas/colombia.json")
-    .then(function (r) { return r.ok ? r.json() : Promise.reject(); })
-    .then(function (j) { REGLAS = j; })
-    .catch(function () {})
-    .then(iniciar);
+  Promise.all([
+    fetch("reglas/colombia.json").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; }),
+    fetch("config.json").then(function (r) { return r.ok ? r.json() : null; }).catch(function () { return null; })
+  ]).then(function (a) {
+    if (a[0]) REGLAS = a[0];
+    if (a[1] && a[1].lupapKey) LUPAP.key = String(a[1].lupapKey).trim();
+    iniciar();
+  });
   if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
     navigator.serviceWorker.register("sw.js").catch(function () {});
   }

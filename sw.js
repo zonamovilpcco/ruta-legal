@@ -1,7 +1,7 @@
 // Service worker de Ruta Legal: deja la app abrir sin internet (pantalla de la bici y reglas).
 // El mapa, las ciclorrutas y las rutas siempre necesitan internet.
-var CACHE = "ruta-legal-v2";
-var BASE = ["./", "index.html", "manifest.webmanifest", "reglas/colombia.json", "icon-192.png", "icon-512.png"];
+var CACHE = "ruta-legal-v3";
+var BASE = ["./", "index.html", "manifest.webmanifest", "reglas/colombia.json", "icon-192.png", "icon-512.png", "bici-marcador.png"];
 
 self.addEventListener("install", function (e) {
   e.waitUntil(
