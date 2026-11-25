@@ -811,7 +811,7 @@ if (window.maplibregl) {
         el.style.width = (ic.iconSize ? ic.iconSize[0] : 20) + "px";
         el.style.height = (ic.iconSize ? ic.iconSize[1] : 20) + "px";
         el.innerHTML = ic.html || "";
-        var mk = new ML.Marker({ element: el, rotation: o.rotation || 0, rotationAlignment: "map", pitchAlignment: "map" })
+        var mk = new ML.Marker({ element: el, rotation: o.rotation || 0, rotationAlignment: "map", pitchAlignment: "viewport" })
           .setLngLat([it.ll[1], it.ll[0]]).addTo(self.m._m);
         self.marcas.push(mk);
       }
