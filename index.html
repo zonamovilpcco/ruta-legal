@@ -1013,16 +1013,41 @@
       .catch(function () { return []; });
   }
 
+  // Limpia la dirección: "Cra 7 # 32-10" -> "Carrera 7 32-10"
+  function limpiarDireccion(q) {
+    var t = " " + q.replace(/[#°º]/g, " ").replace(/\bn[o°]\.?(?=\s*\d)/gi, " ") + " ";
+    var abre = { cra: "Carrera", cr: "Carrera", kr: "Carrera", carr: "Carrera", cl: "Calle", cll: "Calle", ac: "Avenida Calle", ak: "Avenida Carrera", av: "Avenida", dg: "Diagonal", diag: "Diagonal", tv: "Transversal", trans: "Transversal", tr: "Transversal" };
+    t = t.replace(/\s([a-z]+)\.?(?=\s)/gi, function (m, w) { var k = w.toLowerCase(); return abre[k] ? " " + abre[k] : m; });
+    return t.replace(/\s+/g, " ").trim();
+  }
+
   function buscarNominatim(q) {
     var base = NOMINATIM + "/search?format=jsonv2&addressdetails=1&limit=6&accept-language=es&countrycodes=co&q=";
-    function pedirBusqueda(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); }); }
-    var conCiudad = /bogot/i.test(q) ? q : q + ", Bogotá";
+    function pedirBusqueda(url) { return fetch(url).then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); }); }
+    var l = limpiarDireccion(q);
+    var conCiudad = /bogot/i.test(l) ? l : l + ", Bogotá";
     return pedirBusqueda(base + encodeURIComponent(conCiudad) + "&viewbox=" + VIEWBOX + "&bounded=1")
-      .then(function (r) { return r.length ? r : pedirBusqueda(base + encodeURIComponent(q)); })
+      .then(function (r) { return r.length ? r : pedirBusqueda(base + encodeURIComponent(l)); })
       .then(function (r) {
         return r.map(function (it) {
           var e = etiqueta(it);
           return { lat: parseFloat(it.lat), lon: parseFloat(it.lon), nombre: e.nombre || it.display_name, sub: e.sub || it.display_name };
+        });
+      });
+  }
+
+  // Segundo buscador (Photon, también basado en OpenStreetMap) por si Nominatim falla o no encuentra.
+  function buscarPhoton(q) {
+    var l = limpiarDireccion(q);
+    return fetch("https://photon.komoot.io/api/?limit=6&lat=4.65&lon=-74.07&bbox=-74.25,4.45,-73.99,4.85&q=" + encodeURIComponent(/bogot/i.test(l) ? l : l + " Bogotá"))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http " + r.status)); })
+      .then(function (j) {
+        return (j.features || []).filter(function (f) { return f.geometry && f.geometry.coordinates; }).map(function (f) {
+          var p = f.properties || {};
+          var calle = [p.street, p.housenumber].filter(Boolean).join(" ");
+          var nombre = p.name || calle || q;
+          var zona = [p.name && calle ? calle : "", p.district || p.locality || "", p.city || ""].filter(Boolean).join(", ");
+          return { lat: f.geometry.coordinates[1], lon: f.geometry.coordinates[0], nombre: nombre, sub: zona || "Bogotá" };
         });
       });
   }
@@ -1032,14 +1057,17 @@
     var q = $("q").value.trim();
     if (q.length < 3) { toast("Escribe al menos 3 letras."); return; }
     toast("Buscando...", 8000);
-    Promise.all([buscarLupap(q), buscarNominatim(q).catch(function () { return null; })]).then(function (res) {
-      var lup = res[0], nom = res[1];
-      if (nom === null && !lup.length) { toast("No pude buscar ahora. Revisa tu conexión e intenta de nuevo."); return; }
-      var items = lup.slice();
-      (nom || []).forEach(function (n) {
-        var repetido = items.some(function (x) { return metros([x.lat, x.lon], [n.lat, n.lon]) < 40; });
-        if (!repetido) items.push(n);
+    var fallas = [];
+    function seguro(nombre, p) { return p.catch(function (e) { fallas.push(nombre + ": " + ((e && e.message) || "sin respuesta")); return null; }); }
+    Promise.all([buscarLupap(q), seguro("Nominatim", buscarNominatim(q)), seguro("Photon", buscarPhoton(q))]).then(function (res) {
+      var items = res[0].slice();
+      [res[1], res[2]].forEach(function (lista) {
+        (lista || []).forEach(function (n) {
+          var repetido = items.some(function (x) { return metros([x.lat, x.lon], [n.lat, n.lon]) < 40; });
+          if (!repetido) items.push(n);
+        });
       });
+      if (!items.length && fallas.length === 2) { toast("No pude buscar ahora (" + fallas.join("; ") + "). Revisa tu conexión e intenta de nuevo.", 9000); return; }
       mostrarResultados(items);
     });
   }
