@@ -1,6 +1,6 @@
 // Service worker de Ruta Legal: deja la app abrir sin internet (pantalla de la bici y reglas).
 // El mapa, las ciclorrutas y las rutas siempre necesitan internet.
-var CACHE = "ruta-legal-v5";
+var CACHE = "ruta-legal-v7";
 var BASE = ["./", "index.html", "manifest.webmanifest", "reglas/colombia.json", "icon-192.png", "icon-512.png", "bici-marcador.png"];
 
 self.addEventListener("install", function (e) {
@@ -35,7 +35,7 @@ self.addEventListener("fetch", function (e) {
   // Archivos propios: primero la red (así ves siempre la versión nueva), y sin internet el caché.
   if (url.origin === self.location.origin) {
     e.respondWith(
-      fetch(req).then(function (res) { return guardar(req, res); }).catch(function () {
+      fetch(req, { cache: "no-cache" }).then(function (res) { return guardar(req, res); }).catch(function () {
         return caches.match(req, { ignoreSearch: true }).then(function (hit) {
           return hit || (req.mode === "navigate" ? caches.match("index.html") : Response.error());
         });
@@ -51,7 +51,7 @@ self.addEventListener("fetch", function (e) {
   if (libreria || fuente) {
     e.respondWith(
       caches.match(req).then(function (hit) {
-        return hit || fetch(req).then(function (res) { return guardar(req, res); });
+        return hit || fetch(req, { cache: "no-cache" }).then(function (res) { return guardar(req, res); });
       })
     );
   }
