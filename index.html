@@ -582,7 +582,7 @@
     <label class="sw" for="chk-3d"><span>En la guía, inclinar el mapa en 3D</span><input id="chk-3d" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
     <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
-    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 7 (diseño nuevo, 3D)</span> Mapa: © OpenStreetMap, OpenFreeMap, OpenMapTiles.</p>
+    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 8 (app Android, 3D)</span> Mapa: © OpenStreetMap, OpenFreeMap, OpenMapTiles.</p>
   </div>
 
   <div class="ov ov-bottom">
@@ -2152,6 +2152,34 @@ if (window.maplibregl) {
     avanzarRuta(ll);
   }
 
+  // En la app Android (Capacitor) el GPS sigue con la pantalla apagada gracias al plugin de segundo plano.
+  function esApp() { var C = window.Capacitor; return !!(C && C.isNativePlatform && C.isNativePlatform()); }
+  function plugBG() { return esApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.BackgroundGeolocation || null; }
+  var bgId = null;
+  function vigilar() {
+    var bg = plugBG();
+    if (bg) {
+      bg.addWatcher({
+        backgroundTitle: "Ruta Legal activa", backgroundMessage: "Siguiendo tu ruta y tu velocidad.",
+        requestPermissions: true, stale: false, distanceFilter: 0
+      }, function (l, err) {
+        if (err) {
+          toast("No pude seguir tu ubicación. Activa el permiso de ubicación para Ruta Legal.", 6000);
+          if (err.code === "NOT_AUTHORIZED") { try { bg.openSettings(); } catch (e) {} }
+          return;
+        }
+        alPosicion({ coords: { latitude: l.latitude, longitude: l.longitude, accuracy: l.accuracy, heading: l.bearing, speed: l.speed }, timestamp: l.time });
+      }).then(function (id) {
+        if (navId === null) bg.removeWatcher({ id: id }); else bgId = id;
+      });
+      return "bg";
+    }
+    return navigator.geolocation.watchPosition(alPosicion, function (err) {
+      toast("No pude seguir tu ubicación. Activa el permiso de ubicación del navegador para este sitio.", 6000);
+      if (err && err.code === 1) { detenerGuia(); borrarRuta(); }
+    }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
+  }
+
   function iniciarGuia() {
     if (!navigator.geolocation) { toast("Este navegador no entrega la ubicación."); return; }
     try {
@@ -2170,15 +2198,15 @@ if (window.maplibregl) {
     msgGuia("Buscando señal de GPS...");
     if (navUlt) mapa.setView(navUlt.ll, 17);
     actualizarNorte();
-    navId = navigator.geolocation.watchPosition(alPosicion, function (err) {
-      toast("No pude seguir tu ubicación. Activa el permiso de ubicación del navegador para este sitio.", 6000);
-      if (err && err.code === 1) { detenerGuia(); borrarRuta(); }
-    }, { enableHighAccuracy: true, maximumAge: 1000, timeout: 20000 });
+    navId = vigilar();
     pedirWake();
   }
 
   function detenerGuia() {
-    try { if (navId !== null) navigator.geolocation.clearWatch(navId); } catch (e) {}
+    try {
+      if (navId === "bg") { if (bgId !== null && plugBG()) plugBG().removeWatcher({ id: bgId }); bgId = null; }
+      else if (navId !== null) navigator.geolocation.clearWatch(navId);
+    } catch (e) {}
     navId = null;
     try { if (wake) wake.release(); } catch (e) {}
     wake = null;
@@ -2289,7 +2317,7 @@ if (window.maplibregl) {
     if (a[1] && a[1].lupapKey) LUPAP.key = String(a[1].lupapKey).trim();
     iniciar();
   });
-  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0) {
+  if ("serviceWorker" in navigator && location.protocol.indexOf("http") === 0 && !esApp()) {
     navigator.serviceWorker.register("sw.js").catch(function () {});
   }
 })();

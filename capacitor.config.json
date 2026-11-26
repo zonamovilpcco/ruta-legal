@@ -1,0 +1,7 @@
+{
+  "appId": "co.zonamovil.rutalegal",
+  "appName": "Ruta Legal",
+  "webDir": "www",
+  "server": { "androidScheme": "https" },
+  "android": { "useLegacyBridge": true }
+}
