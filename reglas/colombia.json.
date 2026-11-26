@@ -23,6 +23,13 @@
     {
       "titulo": "Portafolio",
       "url": "https://www.portafolio.co/economia/gobierno/patinetas-electricas-y-bici-motos-asi-cambian-las-reglas-para-circular-en-las-ciudades-de-colombia-500997"
+    },
+    {
+      "titulo": "Resolución 20263040030675 de 2026 (MinTransporte)",
+      "url": "https://www.asuntoslegales.com.co/actualidad/asi-cambiara-la-circulacion-de-patinetas-y-bicicletas-electricas-con-la-nueva-resolucion-4516800"
     }
-  ]
+  ],
+  "smldvPesos": 58363,
+  "smldvAnio": 2026,
+  "multaVelocidadSmldv": 6
 }
