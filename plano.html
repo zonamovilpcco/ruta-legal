@@ -387,6 +387,7 @@
   .guia-top-gap { height: 0; }
 
   /* ----- Panel inferior de la guía ----- */
+  .btn-recentrar { align-self: flex-end; pointer-events: auto; border: 0; border-radius: 999px; padding: 12px 18px; min-height: 48px; background: var(--nav); color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; box-shadow: var(--shadow); }
   .sheet-guia { border-radius: 28px; padding: 16px 16px 14px; gap: 10px; position: relative; overflow: hidden; }
   .stats { display: grid; grid-template-columns: 1fr 0.9fr 1.3fr; gap: 0; }
   #guia-hora { font-size: 1.3rem; }
@@ -569,7 +570,7 @@
     <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
     <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
-    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 8 (app Android)</span></p>
+    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 10 (direcciones y ciclorrutas)</span></p>
   </div>
 
   <div class="ov ov-bottom">
@@ -621,6 +622,7 @@
       </details>
     </section>
 
+    <button type="button" class="btn-recentrar" id="btn-recentrar" hidden>Volver a mi ubicación</button>
     <section class="sheet sheet-guia" id="card-guia" hidden aria-label="Guía en marcha">
       <div class="stats">
         <div class="stat">
@@ -654,7 +656,7 @@
 (function () {
   // Copia de respaldo de reglas/colombia.json. Sirve cuando abres index.html con doble clic
   // (el navegador no deja leer archivos así). Si cambias las reglas, cambia el JSON; esta copia es solo respaldo.
-  var REGLAS = {"region": "Colombia", "revisadas": "2026-11-23", "ciclorrutaKmh": 25, "calzadaKmh": 40, "potenciaMaxW": 1000, "sinPapeles": {"pesoKg": 60, "kmh": 40}, "potenciasAnteriores": "350 W (norma anterior) y 500 W (referencia usada por la Secretaría de Movilidad de Bogotá)", "pesoAnteriorKg": 35, "laminaDesde": "2027-01-01"};
+  var REGLAS = {"region": "Colombia", "revisadas": "2026-11-23", "ciclorrutaKmh": 25, "calzadaKmh": 40, "potenciaMaxW": 1000, "sinPapeles": {"pesoKg": 60, "kmh": 40}, "potenciasAnteriores": "350 W (norma anterior) y 500 W (referencia usada por la Secretaría de Movilidad de Bogotá)", "pesoAnteriorKg": 35, "laminaDesde": "2027-01-01", "smldvPesos": 58363, "smldvAnio": 2026, "multaVelocidadSmldv": 6};
 
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "ruta-legal-bici";
@@ -790,7 +792,7 @@
 
   // ===== MAPA =====
   var mapa = null, capaCiclo = null, capaYo = null, capaRuta = null, capaLugar = null;
-  var estadoActual = null, datosCiclo = [], idxCiclo = [];
+  var estadoActual = null, datosCiclo = [], idxCiclo = [], cicloEstado = "cargando";
   var BOGOTA = [4.6097, -74.0817];
   var OVERPASS = ["https://overpass-api.de/api/interpreter", "https://overpass.kumi.systems/api/interpreter"];
   var NOMINATIM = "https://nominatim.openstreetmap.org";
@@ -801,7 +803,7 @@
   var estadoMapa = "idle", cicloVisible = true, vistaCargada = null, cargandoVista = false, tMover = null, avisoZoom = false;
   var lugar = null, origen = null, ultToque = 0, ultReverso = 0, tToast = null, idRuta = 0;
   var rutaPts = [], rutaMan = [], rutaAcum = [], rutaInfo = null, rutaDest = null, sigIdx = 0, avisadoMan = -1;
-  var navId = null, navUlt = null, navCentro = null, navCargando = false, navEspera = 0, wake = null, audioCtx = null;
+  var navSoltado = false, navId = null, navUlt = null, navCentro = null, navCargando = false, navEspera = 0, wake = null, audioCtx = null;
   var ultAlerta = { tipo: "", tBip: 0, tVoz: 0 }, llego = false, fueraRuta = 0, ultRecalc = 0;
 
   var ICONO = {
@@ -843,6 +845,7 @@
     $("card-ruta").hidden = e !== "ruta";
     $("card-guia").hidden = e !== "guia";
     $("top-guia").hidden = e !== "guia";
+    if (e !== "guia") $("btn-recentrar").hidden = true;
     $("speedo").hidden = e !== "guia";
     $("top-buscar").hidden = e === "guia";
     $("fabs").hidden = e === "guia";
@@ -876,6 +879,13 @@
     capaRuta = L.layerGroup().addTo(mapa);
     capaLugar = L.layerGroup().addTo(mapa);
 
+    mapa.on("dragstart", function () {
+      if (estadoMapa === "guia" && $("chk-sigue").checked) { $("chk-sigue").checked = false; navSoltado = true; $("btn-recentrar").hidden = false; }
+    });
+    $("btn-recentrar").addEventListener("click", function () {
+      $("chk-sigue").checked = true; navSoltado = false; $("btn-recentrar").hidden = true;
+      if (navUlt) seguir(navUlt.ll, 0);
+    });
     mapa.on("click", alToque);
     mapa.on("contextmenu", alToque);
     mapa.on("moveend", alMover);
@@ -1051,10 +1061,24 @@
 
   // Limpia la dirección: "Cra 7 # 32-10" -> "Carrera 7 32-10"
   function limpiarDireccion(q) {
+    q = String(q || "").replace(/[\u2013\u2014\u2212]/g, "-");
+    // Si viene copiada con barrio, ciudad o notas ("Cra 13 # 45-67, Chapinero, Bogotá"), tomamos el pedazo que trae la calle.
+    var partes = q.split(/[,;\n]/), buena = null;
+    for (var i = 0; i < partes.length; i++) {
+      if (/\b(calle|carrera|cra|cr|kr|cl|cll|av|avenida|ac|ak|dg|diag|diagonal|tv|trans|transversal|tr)\b.*\d/i.test(partes[i])) { buena = partes[i]; break; }
+    }
+    if (buena) q = buena;
     var t = " " + q.replace(/[#°º]/g, " ").replace(/\bn[o°]\.?(?=\s*\d)/gi, " ") + " ";
     var abre = { cra: "Carrera", cr: "Carrera", kr: "Carrera", carr: "Carrera", cl: "Calle", cll: "Calle", ac: "Avenida Calle", ak: "Avenida Carrera", av: "Avenida", dg: "Diagonal", diag: "Diagonal", tv: "Transversal", trans: "Transversal", tr: "Transversal" };
     t = t.replace(/\s([a-z]+)\.?(?=\s)/gi, function (m, w) { var k = w.toLowerCase(); return abre[k] ? " " + abre[k] : m; });
-    return t.replace(/\s+/g, " ").trim();
+    // Quita lo que viene después de la puerta: apartamento, casa, torre, barrio, etc., y la ciudad.
+    t = t.replace(/\s(apto|apartamento|apt|casa|torre|int|interior|local|piso|oficina|of|bodega|barrio|edificio|edif|conjunto|conj|manzana|mz|bloque|bl|lote|etapa|agrupaci[oó]n|urbanizaci[oó]n|urb|ref|referencia|porter[ií]a|consultorio|sector)\b.*$/i, " ");
+    t = t.replace(/(^|\s)(bogot[aá]|colombia)(?=\s|$)/gi, " ").replace(/\bd\.?\s?c\.?(?=\s|$)/gi, " ");
+    t = t.replace(/[.]/g, " ").replace(/\s+/g, " ").trim();
+    // "27 S" o "27 Sur" después del cruce: lo pasamos al final ("... 27-33 Sur")
+    t = t.replace(/(\d[A-Za-z]?)\s+(s|sur)(?=\s|$)/gi, "$1 Sur").replace(/(\d[A-Za-z]?)\s+(e|este)(?=\s|$)/gi, "$1 Este");
+    t = t.replace(/^(\D+\d+[A-Za-z]?(?:\s+Bis)?)\s+(\d+[A-Za-z]?)\s+(Sur|Este)\s*-?\s*(\d+)$/i, "$1 $2-$4 $3");
+    return t;
   }
 
   function buscarNominatim(q) {
@@ -1120,7 +1144,9 @@
     var esCalle = /calle|diagonal/.test(tipo);
     var via = sigla + " " + n1 + (esCalle && cuad ? " " + cuad : "");
     var texto = cruce + " %" + (!esCalle && cuad ? " " + cuad : "");
-    var where = "PDONVIAL='" + via + "' AND PDOTEXTO LIKE '" + texto + "'";
+    var alt = { AK: "KR", AC: "CL" }[sigla];
+    var vias = "'" + via + "'" + (alt ? ",'" + via.replace(sigla, alt) + "'" : "");
+    var where = "PDONVIAL IN (" + vias + ") AND PDOTEXTO LIKE '" + texto + "'";
     var url = PLACAS + "/query?where=" + encodeURIComponent(where) + "&outFields=PDOTEXTO,PDONVIAL&outSR=4326&geometryPrecision=6&resultRecordCount=300";
     return consultaArcgis(url).then(function (j) {
       var mejor = null, dm = 1e9;
@@ -1597,8 +1623,11 @@
     };
   }
 
+  function plugTTS() { return esApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech || null; }
   function hablar(t) {
     try {
+      var tts = plugTTS();
+      if (tts) { tts.speak({ text: t, lang: "es-CO", rate: 1.0, pitch: 1.0, volume: 1.0, queueStrategy: 0 }).catch(function () {}); return; }
       if (!("speechSynthesis" in window)) return;
       var u = new SpeechSynthesisUtterance(t);
       u.lang = "es-CO";
@@ -1638,8 +1667,11 @@
       voz = "Estás en una ciclorruta que tu bici no puede usar. Pasa a la calle.";
     } else if (kmh > lim + 1) {
       tipo = via ? "ciclo-vel" : "calle-vel";
-      texto = "Vas a " + Math.round(kmh) + " km/h. " + (dom ? "En la ciclovía" : (via ? "En ciclorruta" : "En la calle")) + " el máximo es " + lim + ". Baja la velocidad.";
+      var multa = Math.round((REGLAS.smldvPesos || 58363) * (REGLAS.multaVelocidadSmldv || 6) / 1000) * 1000;
+      var multaTxt = "$" + multa.toLocaleString("es-CO");
+      texto = "Vas a " + Math.round(kmh) + " km/h. " + (dom ? "En la ciclovía" : (via ? "En ciclorruta" : "En la calle")) + " el máximo es " + lim + ". Baja la velocidad: te expones a un comparendo de unos " + multaTxt + ".";
       voz = "Baja la velocidad. El máximo es " + lim + ".";
+      if (tipo !== ultAlerta.tipo) voz += " Te expones a un comparendo de unos " + Math.round(multa / 1000) + " mil pesos.";
     }
     $("hud-kmh-n").textContent = Math.round(kmh);
     $("hud-lim-n").textContent = lim;
@@ -1655,7 +1687,9 @@
       if (tipo !== ultAlerta.tipo || ahora - ultAlerta.tVoz > 15000) { hablar(voz); ultAlerta.tVoz = ahora; }
     }
     ultAlerta.tipo = tipo;
-    msgGuia(idxCiclo.length ? "" : "Sin datos de ciclorrutas aquí: el límite que ves es el de la calle. En ciclorruta el máximo es " + REGLAS.ciclorrutaKmh + " km/h.");
+    msgGuia(idxCiclo.length ? "" : (cicloEstado === "cargando" ? "Cargando las ciclorrutas de la zona..." :
+      (cicloEstado === "error" ? "No pude cargar las ciclorrutas (señal o servicio ocupado). Reintento en unos segundos." :
+      "No hay ciclorrutas registradas en esta zona: el límite que ves es el de la calle. En ciclorruta el máximo es " + REGLAS.ciclorrutaKmh + " km/h.")));
   }
 
   function avanzarRuta(ll) {
@@ -1676,7 +1710,8 @@
     var pr = progreso(ll);
     turn.hidden = false;
     var min = Math.max(1, Math.round(pr.resto / Math.max(1, rutaInfo.total) * rutaInfo.min));
-    var hora = new Date(Date.now() + min * 60000).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+    var dd = new Date(Date.now() + min * 60000);
+    var hora = ("0" + dd.getHours()).slice(-2) + ":" + ("0" + dd.getMinutes()).slice(-2);
     var td = textoDistancia(pr.resto).split(" ");
     $("guia-eta").textContent = min; $("guia-hora").textContent = hora;
     $("guia-dist").textContent = td[0]; $("guia-dist-u").textContent = td[1];
@@ -1712,16 +1747,16 @@
 
   function cargarAlrededor(ll) {
     if (navCargando) return;
-    navCargando = true;
+    navCargando = true; cicloEstado = "cargando";
     var d = 0.01;
     consultaCiclo([ll[0] - d, ll[1] - d, ll[0] + d, ll[1] + d]).then(function (els) {
       datosCiclo = els;
-      navCentro = ll;
+      navCentro = ll; cicloEstado = "ok";
       indexarCiclo();
       pintarCiclorrutas();
     }).catch(function () {
-      navCentro = null;
-      navEspera = Date.now() + 30000;
+      navCentro = null; cicloEstado = "error";
+      navEspera = Date.now() + 10000;
     }).then(function () { navCargando = false; });
   }
 
@@ -1794,6 +1829,7 @@
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume();
     } catch (e) {}
+    if (navSoltado) { $("chk-sigue").checked = true; navSoltado = false; }
     navCentro = null; navEspera = 0; llego = false; fueraRuta = 0; ultRecalc = 0; zoomObj = 17; zoomVotos = 0;
     ultAlerta = { tipo: "", tBip: 0, tVoz: 0 };
     setEstado("guia");

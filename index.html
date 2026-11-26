@@ -395,6 +395,7 @@
   .guia-top-gap { height: 0; }
 
   /* ----- Panel inferior de la guía ----- */
+  .btn-recentrar { align-self: flex-end; pointer-events: auto; border: 0; border-radius: 999px; padding: 12px 18px; min-height: 48px; background: var(--nav); color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; box-shadow: var(--shadow); }
   .sheet-guia { border-radius: 28px; padding: 16px 16px 14px; gap: 10px; position: relative; overflow: hidden; }
   .stats { display: grid; grid-template-columns: 1fr 0.9fr 1.3fr; gap: 0; }
   #guia-hora { font-size: 1.3rem; }
@@ -637,6 +638,7 @@
       </details>
     </section>
 
+    <button type="button" class="btn-recentrar" id="btn-recentrar" hidden>Volver a mi ubicación</button>
     <section class="sheet sheet-guia" id="card-guia" hidden aria-label="Guía en marcha">
       <div class="stats">
         <div class="stat">
@@ -912,7 +914,12 @@ if (window.maplibregl) {
         self._ctx.forEach(function (fn) { fn({ latlng: { lat: e.lngLat.lat, lng: e.lngLat.lng }, originalEvent: e.originalEvent }); });
       }, 650);
     });
-    ["touchend", "touchcancel", "dragstart", "zoomstart", "rotatestart", "pitchstart"].forEach(function (t) { mp.on(t, function () { clearTimeout(self._lp); }); });
+    ["touchend", "touchcancel", "dragstart", "zoomstart", "rotatestart", "pitchstart"].forEach(function (t) {
+      mp.on(t, function (e) {
+        clearTimeout(self._lp);
+        if (t.indexOf("start") > 0 && e && e.originalEvent) (self._ds || []).forEach(function (fn) { fn({}); });
+      });
+    });
     this._cargarEstilo();
     if (window.matchMedia) {
       try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", function () { self.aplicarTemaMapa(); }); } catch (e) {}
@@ -945,6 +952,7 @@ if (window.maplibregl) {
     var self = this;
     if (t === "click") this._clicks.push(fn);
     else if (t === "contextmenu") this._ctx.push(fn);
+    else if (t === "dragstart") { this._ds = this._ds || []; this._ds.push(fn); }
     else this._m.on(t, function () { fn({}); });
     return this;
   };
@@ -1021,7 +1029,7 @@ if (window.maplibregl) {
 (function () {
   // Copia de respaldo de reglas/colombia.json. Sirve cuando abres index.html con doble clic
   // (el navegador no deja leer archivos así). Si cambias las reglas, cambia el JSON; esta copia es solo respaldo.
-  var REGLAS = {"region": "Colombia", "revisadas": "2026-11-23", "ciclorrutaKmh": 25, "calzadaKmh": 40, "potenciaMaxW": 1000, "sinPapeles": {"pesoKg": 60, "kmh": 40}, "potenciasAnteriores": "350 W (norma anterior) y 500 W (referencia usada por la Secretaría de Movilidad de Bogotá)", "pesoAnteriorKg": 35, "laminaDesde": "2027-01-01"};
+  var REGLAS = {"region": "Colombia", "revisadas": "2026-11-23", "ciclorrutaKmh": 25, "calzadaKmh": 40, "potenciaMaxW": 1000, "sinPapeles": {"pesoKg": 60, "kmh": 40}, "potenciasAnteriores": "350 W (norma anterior) y 500 W (referencia usada por la Secretaría de Movilidad de Bogotá)", "pesoAnteriorKg": 35, "laminaDesde": "2027-01-01", "smldvPesos": 58363, "smldvAnio": 2026, "multaVelocidadSmldv": 6};
 
   var $ = function (id) { return document.getElementById(id); };
   var KEY = "ruta-legal-bici";
@@ -1168,7 +1176,7 @@ if (window.maplibregl) {
   var estadoMapa = "idle", cicloVisible = true, vistaCargada = null, cargandoVista = false, tMover = null, avisoZoom = false;
   var lugar = null, origen = null, ultToque = 0, ultReverso = 0, tToast = null, idRuta = 0;
   var rutaPts = [], rutaMan = [], rutaAcum = [], rutaInfo = null, rutaDest = null, sigIdx = 0, avisadoMan = -1;
-  var navId = null, navUlt = null, navCentro = null, navCargando = false, navEspera = 0, wake = null, audioCtx = null;
+  var navSoltado = false, navId = null, navUlt = null, navCentro = null, navCargando = false, navEspera = 0, wake = null, audioCtx = null;
   var ultAlerta = { tipo: "", tBip: 0, tVoz: 0 }, llego = false, fueraRuta = 0, ultRecalc = 0;
 
   var ICONO = {
@@ -1210,6 +1218,7 @@ if (window.maplibregl) {
     $("card-ruta").hidden = e !== "ruta";
     $("card-guia").hidden = e !== "guia";
     $("top-guia").hidden = e !== "guia";
+    if (e !== "guia") $("btn-recentrar").hidden = true;
     $("speedo").hidden = e !== "guia";
     $("top-buscar").hidden = e === "guia";
     $("fabs").hidden = e === "guia";
@@ -1253,6 +1262,13 @@ if (window.maplibregl) {
     capaRuta = L.layerGroup().addTo(mapa);
     capaLugar = L.layerGroup().addTo(mapa);
 
+    mapa.on("dragstart", function () {
+      if (estadoMapa === "guia" && $("chk-sigue").checked) { $("chk-sigue").checked = false; navSoltado = true; $("btn-recentrar").hidden = false; }
+    });
+    $("btn-recentrar").addEventListener("click", function () {
+      $("chk-sigue").checked = true; navSoltado = false; $("btn-recentrar").hidden = true;
+      if (navUlt) seguir(navUlt.ll, 0);
+    });
     mapa.on("click", alToque);
     mapa.on("contextmenu", alToque);
     mapa.on("moveend", alMover);
@@ -1989,8 +2005,11 @@ if (window.maplibregl) {
     };
   }
 
+  function plugTTS() { return esApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.TextToSpeech || null; }
   function hablar(t) {
     try {
+      var tts = plugTTS();
+      if (tts) { tts.speak({ text: t, lang: "es-CO", rate: 1.0, pitch: 1.0, volume: 1.0, queueStrategy: 0 }).catch(function () {}); return; }
       if (!("speechSynthesis" in window)) return;
       var u = new SpeechSynthesisUtterance(t);
       u.lang = "es-CO";
@@ -2030,8 +2049,11 @@ if (window.maplibregl) {
       voz = "Estás en una ciclorruta que tu bici no puede usar. Pasa a la calle.";
     } else if (kmh > lim + 1) {
       tipo = via ? "ciclo-vel" : "calle-vel";
-      texto = "Vas a " + Math.round(kmh) + " km/h. " + (dom ? "En la ciclovía" : (via ? "En ciclorruta" : "En la calle")) + " el máximo es " + lim + ". Baja la velocidad.";
+      var multa = Math.round((REGLAS.smldvPesos || 58363) * (REGLAS.multaVelocidadSmldv || 6) / 1000) * 1000;
+      var multaTxt = "$" + multa.toLocaleString("es-CO");
+      texto = "Vas a " + Math.round(kmh) + " km/h. " + (dom ? "En la ciclovía" : (via ? "En ciclorruta" : "En la calle")) + " el máximo es " + lim + ". Baja la velocidad: te expones a un comparendo de unos " + multaTxt + ".";
       voz = "Baja la velocidad. El máximo es " + lim + ".";
+      if (tipo !== ultAlerta.tipo) voz += " Te expones a un comparendo de unos " + Math.round(multa / 1000) + " mil pesos.";
     }
     $("hud-kmh-n").textContent = Math.round(kmh);
     $("hud-lim-n").textContent = lim;
@@ -2068,7 +2090,8 @@ if (window.maplibregl) {
     var pr = progreso(ll);
     turn.hidden = false;
     var min = Math.max(1, Math.round(pr.resto / Math.max(1, rutaInfo.total) * rutaInfo.min));
-    var hora = new Date(Date.now() + min * 60000).toLocaleTimeString("es-CO", { hour: "2-digit", minute: "2-digit" });
+    var dd = new Date(Date.now() + min * 60000);
+    var hora = ("0" + dd.getHours()).slice(-2) + ":" + ("0" + dd.getMinutes()).slice(-2);
     var td = textoDistancia(pr.resto).split(" ");
     $("guia-eta").textContent = min; $("guia-hora").textContent = hora;
     $("guia-dist").textContent = td[0]; $("guia-dist-u").textContent = td[1];
@@ -2186,6 +2209,7 @@ if (window.maplibregl) {
       audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
       audioCtx.resume();
     } catch (e) {}
+    if (navSoltado) { $("chk-sigue").checked = true; navSoltado = false; }
     navCentro = null; navEspera = 0; llego = false; fueraRuta = 0; ultRecalc = 0; zoomObj = 17; zoomVotos = 0;
     ultAlerta = { tipo: "", tBip: 0, tVoz: 0 };
     setEstado("guia");
