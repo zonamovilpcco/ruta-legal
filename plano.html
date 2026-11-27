@@ -354,57 +354,61 @@
   .sheet ol { margin: 8px 0 0; padding-left: 22px; display: flex; flex-direction: column; gap: 6px; }
   /* ----- Tarjeta superior de la guía: giro | indicación | velocidad ----- */
   .guia-card {
-    display: flex; flex-direction: column; background: var(--surface); border-radius: 28px; box-shadow: 0 10px 30px rgb(10 20 40 / 0.22);
-    pointer-events: auto; overflow: hidden; padding: 14px;
+    display: flex; flex-direction: column; background: var(--surface); background: color-mix(in srgb, var(--surface) 90%, transparent);
+    -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); border-radius: 24px; box-shadow: 0 8px 24px rgb(10 20 40 / 0.2);
+    pointer-events: auto; overflow: hidden; padding: 10px 14px;
   }
   .guia-card > * { min-width: 0; }
   .guia-giro { display: flex; align-items: center; gap: 14px; }
   .guia-giro:has(.turn[hidden]):has(.guia-calle:empty) { display: none; }
   .turn { flex: none; display: flex; flex-direction: row; align-items: center; gap: 12px; }
-  .turn-ico { width: 60px; height: 60px; border-radius: 20px; background: var(--nav); color: #fff; display: grid; place-items: center; }
-  .turn-ico svg { width: 34px; height: 34px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
-  .turn-dist { font-family: var(--font-display); font-weight: 800; font-size: 2.1rem; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .turn-ico { width: 48px; height: 48px; border-radius: 16px; background: var(--nav); color: #fff; display: grid; place-items: center; }
+  .turn-ico svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
+  .turn-dist { font-family: var(--font-display); font-weight: 800; font-size: 1.8rem; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .guia-calle {
     flex: 1; margin: 0; display: flex; align-items: center; font-family: var(--font-display); font-weight: 600;
-    font-size: 0.95rem; line-height: 1.25; overflow-wrap: anywhere; color: var(--muted);
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; align-content: center;
+    font-size: 0.88rem; line-height: 1.2; overflow-wrap: anywhere; color: var(--muted);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; align-content: center;
   }
   .guia-calle:empty { display: none; }
-  .speedo { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); border-radius: 0; }
-  .speed-now { font-family: var(--font-display); font-weight: 800; font-size: 4rem; letter-spacing: -0.04em; line-height: 0.95; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 6px; }
-  .speed-now small { font-size: 0.95rem; font-weight: 700; color: var(--muted); letter-spacing: 0; }
-  .lim-col { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
-  .lim { display: flex; align-items: center; gap: 8px; }
+  .speedo { align-self: flex-start; pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 6px 14px 6px 16px; border-radius: 24px; background: var(--surface); background: color-mix(in srgb, var(--surface) 90%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
+  .speed-now { font-family: var(--font-display); font-weight: 800; font-size: 2.7rem; letter-spacing: -0.04em; line-height: 1; font-variant-numeric: tabular-nums; display: flex; align-items: baseline; gap: 4px; }
+  .speed-now small { font-size: 0.8rem; font-weight: 700; color: var(--muted); letter-spacing: 0; }
+  .lim { display: flex; flex-direction: column; align-items: center; gap: 2px; }
   .sign {
-    width: 46px; height: 46px; flex: none; display: grid; place-items: center; box-sizing: border-box;
+    width: 40px; height: 40px; flex: none; display: grid; place-items: center; box-sizing: border-box;
     border-radius: 50%; background: #fff; color: #111; border: 5px solid #E5384A;
-    font-family: var(--font-display); font-weight: 800; font-size: 1.1rem; font-variant-numeric: tabular-nums;
+    font-family: var(--font-display); font-weight: 800; font-size: 1rem; font-variant-numeric: tabular-nums;
   }
-  .where-now { font-size: 0.72rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
-  .estado-chip { font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); white-space: nowrap; }
+  .where-now { font-size: 0.6rem; color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; }
+  .estado-chip { display: none; font-size: 0.8rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; background: var(--ok-bg); color: var(--ok); white-space: nowrap; }
   .speedo.over .estado-chip { background: var(--no-bg); color: var(--no); }
   .speedo.over .speed-now { color: var(--no); }
   .guia-top-gap { height: 0; }
 
   /* ----- Panel inferior de la guía ----- */
   .btn-recentrar { align-self: flex-end; pointer-events: auto; border: 0; border-radius: 999px; padding: 12px 18px; min-height: 48px; background: var(--nav); color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; box-shadow: var(--shadow); }
-  .sheet-guia { border-radius: 28px; padding: 16px 16px 14px; gap: 10px; position: relative; overflow: hidden; }
-  .stats { display: grid; grid-template-columns: 1fr 0.9fr 1.3fr; gap: 0; }
-  #guia-hora { font-size: 1.3rem; }
+  .sheet-guia { border-radius: 24px; padding: 8px 10px 12px 6px; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 8px; row-gap: 4px; position: relative; overflow: hidden;
+    background: var(--surface); background: color-mix(in srgb, var(--surface) 92%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); }
+  .sheet-guia[hidden] { display: none; }
+  .sheet-guia .info, .sheet-guia .prog { grid-column: 1 / -1; }
+  .stats { display: grid; grid-template-columns: 1fr 0.9fr 1fr; gap: 0; }
+  #guia-hora { font-size: 1.4rem; }
   .stats .stat { text-align: center; padding: 0 4px; min-width: 0; }
   .stats .stat + .stat { border-left: 1px solid var(--line); }
-  .stat svg { width: 22px; height: 22px; fill: none; stroke: var(--nav); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; display: block; margin: 0 auto 2px; }
-  .stat .n { font-family: var(--font-display); font-weight: 800; font-size: 1.7rem; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
-  .stat .n small { font-size: 0.95rem; font-weight: 600; margin-left: 2px; }
-  .stat .u { font-size: 0.74rem; color: var(--muted); font-weight: 500; line-height: 1.2; }
-  .guia-fila2 { display: flex; align-items: center; justify-content: space-between; gap: 12px; border-top: 1px solid var(--line); padding-top: 10px; }
-  .en-ruta { display: flex; align-items: center; gap: 8px; color: var(--nav); font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; font-style: italic; }
+  .stat svg { display: none !important; width: 22px; height: 22px; fill: none; stroke: var(--nav); stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; display: block; margin: 0 auto 2px; }
+  .stat .n { font-family: var(--font-display); font-weight: 800; font-size: 1.4rem; letter-spacing: -0.02em; line-height: 1.1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .stat .n small { font-size: 0.75rem; font-weight: 600; margin-left: 2px; }
+  .stat .u { font-size: 0.68rem; color: var(--muted); font-weight: 500; line-height: 1.2; }
+  .guia-fila2 { display: flex; align-items: center; justify-content: flex-end; gap: 0; }
+  .en-ruta { display: none !important; }
+  .en-ruta-x { display: flex; align-items: center; gap: 8px; color: var(--nav); font-family: var(--font-display); font-weight: 700; font-size: 1.15rem; font-style: italic; }
   .en-ruta svg { width: 26px; height: 26px; fill: var(--nav); stroke: none; }
-  .btn.stop { flex: none; min-width: 150px; min-height: 52px; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #E5384A; border-color: #E5384A; color: #fff; border-radius: 18px; font-weight: 800; }
+  .btn.stop { flex: none; min-width: 0; padding: 0 14px; min-height: 50px; font-size: 0.9rem; display: inline-flex; align-items: center; justify-content: center; gap: 8px; background: #E5384A; border-color: #E5384A; color: #fff; border-radius: 18px; font-weight: 800; }
   .btn.stop i { width: 14px; height: 14px; background: #fff; border-radius: 3px; display: inline-block; }
   .sheet-guia .info { margin: 0; font-size: 0.8rem; color: var(--muted); text-align: center; }
   .sheet-guia .info:empty { display: none; }
-  .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 4px; background: var(--line); }
+  .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--line); }
   .prog i { display: block; height: 100%; width: 0; background: var(--nav); transition: width 0.4s; }
   .col-fab { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
   .zoom { display: flex; flex-direction: column; gap: 10px; }
@@ -540,13 +544,14 @@
         </div>
         <p class="guia-calle" id="turn-ins"></p>
       </div>
-      <div class="speedo" id="speedo" hidden>
-        <div class="speed-now"><span id="hud-kmh-n">0</span><small>km/h</small></div>
-        <div class="lim-col">
-          <div class="lim"><span class="where-now" id="hud-donde">Calle</span><div class="sign" id="sign" aria-label="Límite de velocidad"><span id="hud-lim-n">40</span></div></div>
-          <span class="estado-chip" id="hud-estado">Dentro del límite</span>
-        </div>
+    </div>
+    <div class="speedo" id="speedo" hidden>
+      <div class="speed-now"><span id="hud-kmh-n">0</span><small>km/h</small></div>
+      <div class="lim">
+        <div class="sign" id="sign" aria-label="Límite de velocidad"><span id="hud-lim-n">40</span></div>
+        <span class="where-now" id="hud-donde">Calle</span>
       </div>
+      <span class="estado-chip" id="hud-estado" hidden>Dentro del límite</span>
     </div>
     <p class="alerta" id="hud-alerta" role="alert" hidden></p>
   </div>
@@ -570,7 +575,7 @@
     <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
     <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
-    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 10 (direcciones y ciclorrutas)</span></p>
+    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 11 (tarjetas compactas)</span></p>
   </div>
 
   <div class="ov ov-bottom">
@@ -628,17 +633,17 @@
         <div class="stat">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21s7-6.2 7-11.5A7 7 0 0 0 5 9.5C5 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>
           <div class="n"><span id="guia-dist">–</span><small id="guia-dist-u">km</small></div>
-          <div class="u">Distancia restante</div>
+          <div class="u">Distancia</div>
         </div>
         <div class="stat">
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
           <div class="n"><span id="guia-eta">–</span><small>min</small></div>
-          <div class="u">Tiempo estimado</div>
+          <div class="u">Tiempo</div>
         </div>
         <div class="stat">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V4M5 4h13l-2.5 4L18 12H5"/></svg>
           <div class="n" id="guia-hora">–</div>
-          <div class="u">Hora de llegada</div>
+          <div class="u">Llegada</div>
         </div>
       </div>
       <div class="guia-fila2">
