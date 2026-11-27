@@ -16,16 +16,16 @@
 <style>
   /* Dos pantallas: Mi bici (formulario) y Mapa (pantalla completa, estilo Organic Maps). */
   :root {
-    --bg: #F2F5F3;
+    --bg: #EDF0F4;
     --surface: #FFFFFF;
-    --fg: #13201B;
-    --muted: #52645C;
-    --line: #D5DDD8;
-    --accent: #0E6B58;
+    --fg: #0F1A2B;
+    --muted: #566275;
+    --line: #E0E6EE;
+    --accent: #1F6FEB;
     --accent-fg: #FFFFFF;
     --nav: #1F6FEB;
-    --ok: #0B5E4D;
-    --ok-bg: #DDF1EA;
+    --ok: #0B6B3A;
+    --ok-bg: #DCF4E6;
     --warn: #7D4305;
     --warn-bg: #FBEBCF;
     --no: #9C2418;
@@ -41,15 +41,15 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #0E1512;
-      --surface: #16201C;
-      --fg: #E7F0EB;
-      --muted: #9DB0A6;
-      --line: #2A3832;
-      --accent: #4CCBA8;
-      --accent-fg: #06241C;
-      --ok: #5AD6B3;
-      --ok-bg: #12332B;
+      --bg: #0F151E;
+      --surface: #1A2230;
+      --fg: #F2F5FA;
+      --muted: #A9B4C4;
+      --line: #2B3547;
+      --accent: #5B9BFF;
+      --accent-fg: #06142B;
+      --ok: #5EE0A0;
+      --ok-bg: #12382A;
       --warn: #F0B25A;
       --warn-bg: #3A2A0F;
       --no: #FF8F83;
@@ -62,15 +62,15 @@
     }
   }
   :root[data-theme="dark"] {
-    --bg: #0E1512;
-    --surface: #16201C;
-    --fg: #E7F0EB;
-    --muted: #9DB0A6;
-    --line: #2A3832;
-    --accent: #4CCBA8;
-    --accent-fg: #06241C;
-    --ok: #5AD6B3;
-    --ok-bg: #12332B;
+    --bg: #0F151E;
+    --surface: #1A2230;
+    --fg: #F2F5FA;
+    --muted: #A9B4C4;
+    --line: #2B3547;
+    --accent: #5B9BFF;
+    --accent-fg: #06142B;
+    --ok: #5EE0A0;
+    --ok-bg: #12382A;
     --warn: #F0B25A;
     --warn-bg: #3A2A0F;
     --no: #FF8F83;
@@ -199,6 +199,42 @@
   footer a { color: var(--accent); }
   .sources { display: flex; flex-wrap: wrap; gap: 4px 14px; }
 
+
+  /* ===== Pantalla de inicio (diseño nuevo) ===== */
+  .marca { display: flex; align-items: center; gap: 12px; }
+  .marca h1 { font-size: 1.7rem; letter-spacing: -0.02em; font-weight: 800; }
+  .marca .lead { margin: 2px 0 0; font-weight: 600; font-size: 0.95rem; }
+  .logo { flex: none; }
+  .vehiculos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .veh { position: relative; font: inherit; color: var(--fg); background: var(--surface); border: 2px solid var(--line); border-radius: 20px; padding: 14px 6px 12px; min-height: 92px;
+    display: flex; flex-direction: column; align-items: center; gap: 8px; cursor: pointer; }
+  .veh svg { width: 34px; height: 34px; fill: none; stroke: var(--muted); stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .veh span { font-size: 0.8rem; font-weight: 700; color: var(--muted); }
+  .veh em { position: absolute; top: 6px; right: 8px; font-size: 0.62rem; font-style: normal; font-weight: 700; color: var(--muted); }
+  .veh.on { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 12%, var(--surface)); }
+  .veh.on svg { stroke: var(--accent); }
+  .veh.on span { color: var(--fg); font-weight: 800; }
+  .veh:disabled { opacity: 0.55; cursor: default; }
+  .veh:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .panel { border: 0; border-radius: 24px; padding: 16px 18px; }
+  .fields { grid-template-columns: 1fr; gap: 0; }
+  .field { flex-direction: row; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-bottom: 1px solid var(--line); }
+  .field label { font-size: 0.95rem; font-weight: 700; color: var(--fg); }
+  .field .input-unit { width: 150px; flex: none; }
+  .field label { min-width: 0; }
+  input[type="number"] { font-size: 1.4rem; font-weight: 800; letter-spacing: -0.02em; text-align: right; border-radius: 16px; border: 2px solid var(--line); padding: 8px 46px 8px 12px; min-height: 52px; }
+  input[type="number"]:focus { border-color: var(--accent); outline: none; }
+  .unit { font-size: 0.8rem; font-weight: 700; right: 14px; }
+  .seg { border-radius: 16px; border-width: 2px; }
+  .seg label { padding: 12px 8px; font-weight: 700; font-size: 0.9rem; }
+  .verdict { border-radius: 24px; padding: 18px; gap: 10px; }
+  .verdict:has(.pill.ok) { background: var(--ok-bg); } .verdict:has(.pill.ok) .cat { color: var(--ok); }
+  .verdict:has(.pill.cond) { background: var(--warn-bg); } .verdict:has(.pill.cond) .cat { color: var(--warn); }
+  .verdict:has(.pill.no) { background: var(--no-bg); } .verdict:has(.pill.no) .cat { color: var(--no); }
+  .verdict .pill { background: transparent; padding: 0; font-weight: 800; letter-spacing: 0.04em; text-transform: uppercase; font-size: 0.72rem; }
+  .cat { font-size: 1.3rem; font-weight: 800; letter-spacing: -0.01em; }
+  .speed { border: 0; border-radius: 22px; box-shadow: none; }
+  .btn.big { border-radius: 20px; min-height: 56px; font-size: 1.05rem; font-weight: 800; }
 
   /* ===== App de mapa: mapa a pantalla completa con controles flotantes ===== */
   .btn {
@@ -386,6 +422,13 @@
   .speedo.over .speed-now { color: var(--no); }
   .guia-top-gap { height: 0; }
 
+  .modos { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .modo { border: 2px solid var(--line); background: var(--bg); color: var(--fg); border-radius: 14px; padding: 8px 6px; min-height: 52px; font-family: inherit; display: flex; flex-direction: column; align-items: center; gap: 2px; cursor: pointer; }
+  .modo b { font-family: var(--font-display); font-size: 0.85rem; }
+  .modo span { font-size: 0.72rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .modo[aria-pressed="true"] { border-color: var(--nav); background: color-mix(in srgb, var(--nav) 12%, var(--bg)); }
+  .modo[aria-pressed="true"] span { color: var(--fg); }
+
   /* ----- Panel inferior de la guía ----- */
   .btn-recentrar { align-self: flex-end; pointer-events: auto; border: 0; border-radius: 999px; padding: 12px 18px; min-height: 48px; background: var(--nav); color: #fff; font-family: var(--font-display); font-weight: 800; font-size: 0.95rem; box-shadow: var(--shadow); }
   .sheet-guia { border-radius: 24px; padding: 8px 10px 12px 6px; display: grid; grid-template-columns: 1fr auto; align-items: center; column-gap: 8px; row-gap: 4px; position: relative; overflow: hidden;
@@ -425,8 +468,6 @@
   }
 
   @media (max-width: 420px) {
-    .fields { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-    .fields .field:last-child { grid-column: 1 / -1; }
     h1 { font-size: 1.6rem; }
   }
   @media (prefers-reduced-motion: no-preference) {
@@ -438,9 +479,12 @@
 <main id="vista-bici">
 <div class="wrap">
   <header class="top">
-    <div>
-      <h1>Ruta Legal</h1>
-      <p class="lead">Pon los datos de tu bici eléctrica, mira si puedes usar la ciclorruta y a qué velocidad, y luego abre el mapa para navegar.</p>
+    <div class="marca">
+      <svg class="logo" viewBox="0 0 64 64" width="46" height="46" aria-hidden="true"><path d="M32 5 L52 56 L32 46 L12 56 Z" fill="#1F6FEB" stroke="var(--surface)" stroke-width="4" stroke-linejoin="round"/><circle cx="32" cy="36" r="9" fill="#FFC83D"/><path d="M34.5 28 L28 38 H32.5 L30.5 45 L37 35 H32.5 Z" fill="#0F1A2B"/></svg>
+      <div>
+        <h1>Ruta Legal</h1>
+        <p class="lead">Sabe por dónde puedes ir</p>
+      </div>
     </div>
     <div class="top-acciones">
       <button class="btn sec" id="btn-instalar" type="button" hidden>Instalar en mi celular</button>
@@ -452,6 +496,24 @@
       </div>
     </div>
   </header>
+
+  <section aria-labelledby="t-veh">
+    <h2 id="t-veh">¿Qué manejas?</h2>
+    <div class="vehiculos">
+      <button class="veh on" type="button" aria-pressed="true">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16l4-7h5l4 7M9.5 9l2 7M14.5 9l-1-3h-2"/></svg>
+        <span>Bici eléctrica</span>
+      </button>
+      <button class="veh" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="19" r="2"/><circle cx="18" cy="19" r="2"/><path d="M8 19h8M18 17l-2-12h-3M13 5h-2"/></svg>
+        <span>Patineta</span><em>Pronto</em>
+      </button>
+      <button class="veh" type="button" disabled>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="16" r="3.5"/><circle cx="18.5" cy="16" r="3.5"/><path d="M5.5 16h5l3-6h4l1 6M10 10h3"/></svg>
+        <span>Ciclomotor</span><em>Pronto</em>
+      </button>
+    </div>
+  </section>
 
   <section class="panel" aria-labelledby="t-bici">
     <h2 id="t-bici">Tu bici</h2>
@@ -575,7 +637,7 @@
     <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
     <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
     <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
-    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 11 (tarjetas compactas)</span></p>
+    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 13 (inicio nuevo)</span></p>
   </div>
 
   <div class="ov ov-bottom">
@@ -619,6 +681,11 @@
         <button class="icon-btn" id="ruta-cerrar" type="button" aria-label="Borrar ruta">
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
         </button>
+      </div>
+      <div class="modos" id="ruta-modos" role="group" aria-label="Tipo de ruta">
+        <button type="button" class="modo" data-modo="directa" aria-pressed="false"><b>Directa</b><span>—</span></button>
+        <button type="button" class="modo" data-modo="equilibrada" aria-pressed="true"><b>Equilibrada</b><span>—</span></button>
+        <button type="button" class="modo" data-modo="ciclorruta" aria-pressed="false"><b>Ciclorruta</b><span>—</span></button>
       </div>
       <button class="btn" id="btn-iniciar" type="button">Iniciar</button>
       <details id="ruta-pasos">
@@ -926,6 +993,13 @@
     $("lugar-cerrar").addEventListener("click", function () { lugar = null; setEstado("idle"); dibujarMarcadores(); });
     $("ruta-cerrar").addEventListener("click", borrarRuta);
     $("btn-iniciar").addEventListener("click", iniciarGuia);
+    Array.prototype.forEach.call(document.querySelectorAll("#ruta-modos .modo"), function (bt) {
+      bt.addEventListener("click", function () {
+        var m = bt.getAttribute("data-modo");
+        if (m === modoRuta || !rutaOrigen || !rutaDest) return;
+        modoRuta = m; pintarModos(); trazar(rutaOrigen, rutaDest, false, true);
+      });
+    });
     $("btn-terminar").addEventListener("click", function () { detenerGuia(); borrarRuta(); });
     try { window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", pintarCiclorrutas); } catch (e) {}
     try {
@@ -1487,22 +1561,46 @@
     obtenerOrigen(function (a) { trazar(a, b, false); });
   }
 
-  function trazar(a, b, recalculo) {
-    var e = estadoActual;
+  var MODOS = {
+    directa: { uso: 0.85, desc: "La más corta: usa más calles y menos desvíos." },
+    equilibrada: { uso: 0.5, desc: "Equilibrio entre ciclorrutas y calles." },
+    ciclorruta: { uso: 0.1, desc: "La más segura: prefiere ciclorrutas, aunque sea más larga." }
+  };
+  var modoRuta = "equilibrada", resumenModos = {}, rutaOrigen = null, idModos = 0;
+
+  function usoPara(modo, e) { return (e && e.estado === "no") ? 0.9 : MODOS[modo].uso; }
+  function velPara(e) {
     var v = num($("v")) || 25;
-    var uso = e ? (e.estado === "ok" ? 0.15 : (e.estado === "cond" ? 0.4 : 0.9)) : 0.5;
-    var vel = Math.round(Math.max(8, Math.min(v, e && e.estado === "no" ? REGLAS.calzadaKmh : REGLAS.ciclorrutaKmh)));
+    return Math.round(Math.max(8, Math.min(v, e && e.estado === "no" ? REGLAS.calzadaKmh : REGLAS.ciclorrutaKmh)));
+  }
+  function pedirValhalla(a, b, uso, vel) {
     var req = {
       locations: [{ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] }],
       costing: "bicycle",
       costing_options: { bicycle: { bicycle_type: "Hybrid", cycling_speed: vel, use_roads: uso } },
       directions_options: { language: "es-ES", units: "kilometers" }
     };
+    return fetch(VALHALLA + "?json=" + encodeURIComponent(JSON.stringify(req)))
+      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); });
+  }
+  function pintarModos() {
+    var e = estadoActual;
+    $("ruta-modos").hidden = !!(e && e.estado === "no");
+    Array.prototype.forEach.call(document.querySelectorAll("#ruta-modos .modo"), function (bt) {
+      var m = bt.getAttribute("data-modo"), r = resumenModos[m];
+      bt.setAttribute("aria-pressed", m === modoRuta ? "true" : "false");
+      bt.querySelector("span").textContent = r ? r.min + " min · " + r.km.toLocaleString("es-CO", { maximumFractionDigits: 1 }) + " km" : "calculando...";
+    });
+  }
+
+  function trazar(a, b, recalculo, soloModo) {
+    var e = estadoActual;
+    var vel = velPara(e);
     var mi = ++idRuta;
-    if (!recalculo) toast("Trazando ruta...", 10000);
+    rutaOrigen = a;
+    if (!recalculo && !soloModo) toast("Trazando ruta...", 10000);
     $("btn-ir").disabled = true;
-    fetch(VALHALLA + "?json=" + encodeURIComponent(JSON.stringify(req)))
-      .then(function (r) { return r.ok ? r.json() : Promise.reject(new Error("http")); })
+    pedirValhalla(a, b, usoPara(modoRuta, e), vel)
       .then(function (j) {
         if (mi !== idRuta) return;
         var leg = j.trip.legs[0];
@@ -1513,6 +1611,19 @@
         for (var i = 1; i < pts.length; i++) rutaAcum[i] = rutaAcum[i - 1] + metros(pts[i - 1], pts[i]);
         var km = j.trip.summary.length, min = Math.max(1, Math.round(j.trip.summary.time / 60));
         rutaInfo = { km: km, min: min, vel: vel, total: rutaAcum[rutaAcum.length - 1] };
+        if (!recalculo && !soloModo) {
+          resumenModos = {}; var mt = ++idModos;
+          Object.keys(MODOS).forEach(function (k) {
+            if (k === modoRuta) return;
+            pedirValhalla(a, b, usoPara(k, e), vel).then(function (jj) {
+              if (mt !== idModos) return;
+              resumenModos[k] = { km: jj.trip.summary.length, min: Math.max(1, Math.round(jj.trip.summary.time / 60)) };
+              pintarModos();
+            }).catch(function () { if (mt === idModos) { resumenModos[k] = null; pintarModos(); } });
+          });
+        }
+        resumenModos[modoRuta] = { km: km, min: min };
+        pintarModos();
 
         capaRuta.clearLayers();
         capaRuta.addLayer(L.polyline(pts, { pane: "ruta", color: "#ffffff", weight: 14, opacity: 0.95, interactive: false }));
@@ -1521,9 +1632,8 @@
         capaRuta.addLayer(linea);
 
         $("ruta-titulo").textContent = min + " min · " + km.toLocaleString("es-CO", { maximumFractionDigits: 1 }) + " km";
-        $("ruta-resumen").textContent = !e ? "" : (e.estado === "ok" ? "Prefiere ciclorrutas, con máximo " + e.vCiclo + " km/h en ellas."
-          : (e.estado === "cond" ? "Prefiere ciclorrutas, solo con la bici limitada a " + e.vCiclo + " km/h."
-          : "Prefiere calles. Tu bici no puede usar ciclorrutas."));
+        $("ruta-resumen").textContent = !e ? MODOS[modoRuta].desc : (e.estado === "no" ? "Va por calles: tu bici no puede usar ciclorrutas."
+          : MODOS[modoRuta].desc + (e.estado === "cond" ? " En ciclorrutas, con la bici limitada a " : " Máximo ") + e.vCiclo + " km/h en ellas.");
         var lista = $("ruta-lista");
         lista.innerHTML = "";
         rutaMan.forEach(function (m) {
@@ -1533,7 +1643,8 @@
         });
         $("ruta-pasos").hidden = !rutaMan.length;
 
-        if (recalculo) { toast("Ruta actualizada.", 2500); }
+        if (soloModo) { mapa.fitBounds(linea.getBounds(), { padding: [40, 40] }); }
+        else if (recalculo) { toast("Ruta actualizada.", 2500); }
         else {
           toast("");
           setEstado("ruta");
