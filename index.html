@@ -272,7 +272,7 @@
   .temas.iconos svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
   .grp { border-top: 1px solid var(--line); }
   .grp summary { cursor: pointer; padding: 10px 0; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
-  .grp[open] summary { color: var(--text, inherit); }
+  .grp[open] summary { color: var(--fg); }
   #vista-mapa[data-estado="guia"] .zoom { display: none; }
   .q-inicio { width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 2px solid var(--line); border-radius: 16px; background: var(--surface); color: inherit; font: inherit; font-weight: 600; padding: 12px 14px; }
   .alerta { font-size: 0.92rem; }
@@ -422,14 +422,14 @@
   .guia-card > * { min-width: 0; }
   .guia-giro { display: flex; align-items: center; gap: 14px; }
   .guia-giro:has(.turn[hidden]):has(.guia-calle:empty) { display: none; }
-  .turn { flex: none; display: flex; flex-direction: row; align-items: center; gap: 12px; }
-  .turn-ico { width: 48px; height: 48px; border-radius: 16px; background: var(--nav); color: #fff; display: grid; place-items: center; }
-  .turn-ico svg { width: 28px; height: 28px; fill: none; stroke: currentColor; stroke-width: 2.8; stroke-linecap: round; stroke-linejoin: round; }
-  .turn-dist { font-family: var(--font-display); font-weight: 800; font-size: 1.8rem; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .turn { flex: none; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; width: 92px; padding: 8px 6px 9px; border-radius: 18px; background: var(--nav); color: #fff; }
+  .turn-ico { width: 54px; height: 54px; display: grid; place-items: center; }
+  .turn-ico svg { width: 54px; height: 54px; fill: currentColor; stroke: none; }
+  .turn-dist { font-family: var(--font-display); font-weight: 800; font-size: 1.35rem; letter-spacing: -0.02em; line-height: 1; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .guia-calle {
-    flex: 1; margin: 0; display: flex; align-items: center; font-family: var(--font-display); font-weight: 600;
-    font-size: 0.88rem; line-height: 1.2; overflow-wrap: anywhere; color: var(--muted);
-    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 2; overflow: hidden; align-content: center;
+    flex: 1; margin: 0; display: flex; align-items: center; font-family: var(--font-display); font-weight: 800;
+    font-size: 1.2rem; line-height: 1.2; overflow-wrap: anywhere; color: var(--fg);
+    display: -webkit-box; -webkit-box-orient: vertical; -webkit-line-clamp: 3; overflow: hidden; align-content: center;
   }
   .guia-calle:empty { display: none; }
   .speedo { align-self: flex-start; pointer-events: auto; display: flex; align-items: center; gap: 12px; padding: 6px 14px 6px 16px; border-radius: 24px; background: var(--surface); background: color-mix(in srgb, var(--surface) 90%, transparent); -webkit-backdrop-filter: blur(10px); backdrop-filter: blur(10px); box-shadow: var(--shadow); }
@@ -688,11 +688,7 @@
     <input id="chk-z30" type="checkbox" checked hidden>
     <input id="chk-capa-prohib" type="checkbox" hidden>
     <input id="chk-capa-esc" type="checkbox" hidden>
-    <div class="fila-tema"><span>Vista</span><div class="temas voces" role="group" aria-label="Vista del mapa">
-      <button type="button" data-vista="plano" aria-pressed="false">Plano</button>
-      <button type="button" data-vista="3d" aria-pressed="true">3D</button>
-    </div></div>
-    <input id="chk-rumbo" type="checkbox" checked hidden>
+        <input id="chk-rumbo" type="checkbox" checked hidden>
     <input id="chk-3d" type="checkbox" checked hidden>
     <input id="chk-edif" type="checkbox" checked hidden>
     <script>
@@ -704,10 +700,10 @@
         ["chk-rumbo", "chk-3d", "chk-edif"].forEach(function (id) {
           var c = document.getElementById(id); c.checked = x === "3d"; c.dispatchEvent(new Event("change"));
         });
-        document.querySelectorAll("[data-vista]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.vista === x ? "true" : "false"); });
+        var f = document.getElementById("btn-3d"); if (f) f.setAttribute("aria-pressed", x === "3d" ? "true" : "false");
         if (guardar) { try { localStorage.setItem(K, x); } catch (e) {} }
       }
-      document.querySelectorAll("[data-vista]").forEach(function (b) { b.addEventListener("click", function () { poner(b.dataset.vista, true); }); });
+      window.__vista = poner;
       poner(v, false);
     })();
     </script>
@@ -715,7 +711,7 @@
     <details class="grp"><summary>? Leyenda</summary>
     <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección.</p>
     </details>
-    <p class="leyenda"><span id="version">Versión 17 (menú simple, 3D)</span> Mapa: © OpenStreetMap, OpenFreeMap, OpenMapTiles.</p>
+    <p class="leyenda"><span id="version">Versión 19 (giros claros, 3D)</span> Mapa: © OpenStreetMap, OpenFreeMap, OpenMapTiles.</p>
   </div>
 
   <div class="ajustes capas" id="capas" hidden>
@@ -1342,7 +1338,7 @@ if (window.maplibregl) {
 
   var estadoMapa = "idle", cicloVisible = true, vistaCargada = null, cargandoVista = false, tMover = null, avisoZoom = false;
   var lugar = null, origen = null, ultToque = 0, ultReverso = 0, tToast = null, idRuta = 0;
-  var rutaPts = [], rutaMan = [], rutaAcum = [], rutaInfo = null, rutaDest = null, sigIdx = 0, avisadoMan = -1;
+  var rutaPts = [], rutaMan = [], rutaAcum = [], rutaInfo = null, rutaDest = null, sigIdx = 0, avisadoMan = -1, largoMan = -1, ahoraMan = -1, salidaPend = null;
   var navSoltado = false, navId = null, navUlt = null, navCentro = null, navCargando = false, navEspera = 0, wake = null, audioCtx = null;
   var ultAlerta = { tipo: "", tBip: 0, tVoz: 0 }, llego = false, fueraRuta = 0, ultRecalc = 0;
 
@@ -1353,13 +1349,25 @@ if (window.maplibregl) {
     vuelta: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 20V9a4 4 0 0 1 8 0v4"/><path d="M12 10l4 4 4-4"/></svg>'
   };
 
-  // Códigos de maniobra de Valhalla: 4-6 llegada, 12-13 giro en U, 26-27 rotonda; el resto se dibuja como flecha girada.
-  function iconoGiro(tipo) {
-    if (tipo === 4 || tipo === 5 || tipo === 6) return ICONO.meta;
-    if (tipo === 26 || tipo === 27) return ICONO.rotonda;
-    if (tipo === 12 || tipo === 13) return ICONO.vuelta;
-    var ang = { 9: 45, 10: 90, 11: 135, 14: -135, 15: -90, 16: -45, 18: 90, 19: -90, 20: 90, 21: -90, 23: 45, 24: -45 }[tipo] || 0;
-    return '<span style="display:inline-block;transform:rotate(' + ang + 'deg)">' + ICONO.flecha + '</span>';
+  var GIROS = {"turn_straight":"<path d=\"M14.50342,8.96637L11.55157,7.62262A0.35755,0.35755,0,0,0,11.00916,8v9.49652A0.50346,0.50346,0,0,1,10.50568,18h-0.993a0.50346,0.50346,0,0,1-.50348-0.50348V8a0.35756,0.35756,0,0,0-.54242-0.37738L5.51489,8.96637a0.38659,0.38659,0,0,1-.40942-0.62354L10.00916,2l4.90369,6.34283A0.3866,0.3866,0,0,1,14.50342,8.96637Z\"/>","turn_left":"<path d=\"M10,5.97986l0.011,0.00183A6.06019,6.06019,0,0,1,16,12.05493V16H15.99689l0.002,1.50317A0.49614,0.49614,0,0,1,15.50269,18H14.49622A0.49622,0.49622,0,0,1,14,17.50378V12.05493a4.05782,4.05782,0,0,0-3.98877-4.07324H8.01245a0.3576,0.3576,0,0,0-.37738.54248L8.97882,11.476a0.38659,0.38659,0,0,1-.62354.40942L2.0083,7l6.347-4.922a0.38659,0.38659,0,0,1,.62354.40942L7.63507,5.43927a0.35757,0.35757,0,0,0,.37738.54242H10\"/>","turn_right":"<path d=\"M9.98877,7.98169A4.05782,4.05782,0,0,0,6,12.05493v5.44885A0.49622,0.49622,0,0,1,5.50378,18H4.49731a0.49614,0.49614,0,0,1-.49615-0.49683L4.00311,16H4V12.05493A6.06019,6.06019,0,0,1,9.989,5.98169L10,5.97986V5.98169h1.98755a0.35757,0.35757,0,0,0,.37738-0.54242L11.02118,2.48743A0.38659,0.38659,0,0,1,11.64471,2.078L17.9917,7l-6.347,4.88544a0.38659,0.38659,0,0,1-.62354-0.40942l1.34375-2.95184a0.3576,0.3576,0,0,0-.37738-0.54248H9.98877Z\"/>","turn_slight_left":"<path d=\"M14.9859,14.043v3.46082A0.49621,0.49621,0,0,1,14.48974,18H13.48321a0.49614,0.49614,0,0,1-.49615-0.49683l0.0047-3.60767a5.21819,5.21819,0,0,0-1.665-4.144L8.87854,7.68585a0.35758,0.35758,0,0,0-.6405.16266l-0.91821,3.1106A0.38663,0.38663,0,0,1,6.58044,10.86L5,3l8.00476,0.44965a0.38658,0.38658,0,0,1,.20294.71777L10.25878,5.51758a0.3576,0.3576,0,0,0-.07019.6571l2.45746,2.07385A7.25158,7.25158,0,0,1,14.9859,14.043Z\"/>","turn_slight_right":"<path d=\"M7.35395,8.24854L9.81141,6.17468a0.3576,0.3576,0,0,0-.07019-0.6571L6.7923,4.16742a0.38658,0.38658,0,0,1,.20294-0.71777L15,3l-1.58044,7.86a0.38663,0.38663,0,0,1-.73938.09912L11.762,7.84851a0.35758,0.35758,0,0,0-.6405-0.16266L8.67328,9.75146a5.21819,5.21819,0,0,0-1.665,4.144l0.0047,3.60767A0.49614,0.49614,0,0,1,6.51679,18H5.51026a0.49621,0.49621,0,0,1-.49615-0.49622V14.043A7.25157,7.25157,0,0,1,7.35395,8.24854Z\"/>","turn_sharp_left":"<path d=\"M15.49771,17.99542a0.49779,0.49779,0,0,1-.49779-0.49779V4.99933L14.72014,4.993a2.56758,2.56758,0,0,0-2.0957.79L7.22917,10.39583a0.34918,0.34918,0,0,0,.08252.63177l2.92877,1.39331a0.38658,0.38658,0,0,1-.21344.71472l-8.0105.33209,1.69568-7.836a0.38661,0.38661,0,0,1,.74072-0.0882l0.8725,3.12372a0.35757,0.35757,0,0,0,.638.17206L5.9672,8.84377,11.3593,4.23468a4.46634,4.46634,0,0,1,3.38477-1.24121l0.26416,0.002a1.92935,1.92935,0,0,1,1.43408.56885,2.10247,2.10247,0,0,1,.55713,1.46045L16.9999,17.49761a0.49779,0.49779,0,0,1-.49779.49781h-1.0044Z\"/>","turn_sharp_right":"<path d=\"M3.49789,17.99542a0.49779,0.49779,0,0,1-.49779-0.49781L3.00057,5.02472A2.10247,2.10247,0,0,1,3.5577,3.56427a1.92935,1.92935,0,0,1,1.43408-.56885l0.26416-.002A4.46634,4.46634,0,0,1,8.6407,4.23468L14.0328,8.84377l0.00378-.00446a0.35757,0.35757,0,0,0,.638-0.17206l0.8725-3.12372a0.38661,0.38661,0,0,1,.74072.0882l1.69568,7.836L9.973,13.13564a0.38658,0.38658,0,0,1-.21344-0.71472l2.92877-1.39331a0.34918,0.34918,0,0,0,.08252-0.63177L7.37557,5.783a2.56758,2.56758,0,0,0-2.0957-.79l-0.27979.00635v12.4983a0.49779,0.49779,0,0,1-.49779.49779H3.49789Z\"/>","uturn":"<path d=\"M17,8v9.49652A0.50346,0.50346,0,0,1,16.49652,18h-0.993A0.50346,0.50346,0,0,1,15,17.49652V8A3.5,3.5,0,0,0,8,8v4H7.99091a0.35757,0.35757,0,0,0,.54242.37738l2.95184-1.34375a0.3866,0.3866,0,0,1,.40942.62354L6.99091,18,2.08716,11.65717a0.3866,0.3866,0,0,1,.40942-0.62354l2.95184,1.34375A0.3576,0.3576,0,0,0,5.99091,12H6V8A5.5,5.5,0,0,1,17,8Z\"/>","arrive":"<path d=\"M10,5a2,2,0,1,1,2-2A2,2,0,0,1,10,5Zm4.91284,8.35114L10.00916,7.0083,5.10547,13.35114a0.38659,0.38659,0,0,0,.40942.62354l2.95184-1.34375A0.35542,0.35542,0,0,1,9.00769,13H9v5.50006A0.49992,0.49992,0,0,0,9.49994,19h1.00012A0.49992,0.49992,0,0,0,11,18.50006V13.0083h0.00916a0.35757,0.35757,0,0,1,.54242-0.37738l2.95184,1.34375A0.3866,0.3866,0,0,0,14.91284,13.35114Z\"/>","arrive_left":"<path d=\"M3,12a2,2,0,1,1,2-2A2,2,0,0,1,3,12Zm10.00293-.96332a4.05782,4.05782,0,0,1,3.98877,4.07324H17v1.37775A0.51232,0.51232,0,0,0,17.51233,17h0.97534A0.51232,0.51232,0,0,0,19,16.48767V15H18.98615a6.05607,6.05607,0,0,0-5.9834-5.96332l-0.011-.00183,0.00012,0.02008H12V9.04584a0.35757,0.35757,0,0,1-.37738-0.54242l1.34375-2.95184a0.38659,0.38659,0,0,0-.62354-0.40942L6,10.04584l6.34283,4.90369a0.3866,0.3866,0,0,0,.62354-0.40942l-1.34375-2.95184A0.35757,0.35757,0,0,1,12,11.04584v0.00909h1\"/>","arrive_right":"<path d=\"M15,10a2,2,0,1,1,2,2A2,2,0,0,1,15,10ZM7,11.05493H8V11.04584a0.35757,0.35757,0,0,1,.37738.54242L7.03363,14.5401a0.3866,0.3866,0,0,0,.62354.40942L14,10.04584,7.65717,5.14215a0.38659,0.38659,0,0,0-.62354.40942L8.37738,8.50342A0.35757,0.35757,0,0,1,8,9.04584V9.05493H7.00818L7.0083,9.03485l-0.011.00183A6.05607,6.05607,0,0,0,1.01385,15H1v1.48767A0.51232,0.51232,0,0,0,1.51233,17H2.48767A0.51232,0.51232,0,0,0,3,16.48767V15.10992H3.0083a4.05782,4.05782,0,0,1,3.98877-4.07324\"/>","depart_straight":"<path d=\"M10,19a2,2,0,1,1,2-2A2,2,0,0,1,10,19ZM14.91284,7.34283L10.00916,1,5.10547,7.34283a0.38659,0.38659,0,0,0,.40942.62354L8.46674,6.62262a0.35542,0.35542,0,0,1,.541.36908H9v5.50006a0.49992,0.49992,0,0,0,.49994.49994h1.00012A0.49992,0.49992,0,0,0,11,12.49176V7h0.00916a0.35757,0.35757,0,0,1,.54242-0.37738l2.95184,1.34375A0.3866,0.3866,0,0,0,14.91284,7.34283Z\"/>","depart_left":"<path d=\"M15,19a2,2,0,1,1,2-2A2,2,0,0,1,15,19ZM10.00293,8.03668a4.05782,4.05782,0,0,1,3.98877,4.07324H14v1.37775A0.51232,0.51232,0,0,0,14.51233,14h0.97534A0.51232,0.51232,0,0,0,16,13.48767V12H15.98615a6.05607,6.05607,0,0,0-5.9834-5.96332l-0.011-.00183L9.99182,6.05493H9V6.04584a0.35757,0.35757,0,0,1-.37738-0.54242L9.96637,2.55157a0.38659,0.38659,0,0,0-.62354-0.40942L3,7.04584l6.34283,4.90369a0.3866,0.3866,0,0,0,.62354-0.40942L8.62262,8.58826A0.35757,0.35757,0,0,1,9,8.04584V8.05493h1\"/>","depart_right":"<path d=\"M3,17a2,2,0,1,1,2,2A2,2,0,0,1,3,17Zm7-8.94507h1V8.04584a0.35757,0.35757,0,0,1,.37738.54242L10.03363,11.5401a0.3866,0.3866,0,0,0,.62354.40942L17,7.04584,10.65717,2.14215a0.38659,0.38659,0,0,0-.62354.40942l1.34375,2.95184A0.35757,0.35757,0,0,1,11,6.04584V6.05493H10.00818l0.00012-.02008-0.011.00183A6.05607,6.05607,0,0,0,4.01385,12H4v1.48767A0.51232,0.51232,0,0,0,4.51233,14H5.48767A0.51232,0.51232,0,0,0,6,13.48767V12.10992H6.0083A4.05782,4.05782,0,0,1,9.99707,8.03668\"/>","on_ramp_straight":"<path d=\"M14.50342,8.96637L11.55157,7.62262A0.35755,0.35755,0,0,0,11.00916,8v9.49652A0.50346,0.50346,0,0,1,10.50568,18h-0.993a0.50346,0.50346,0,0,1-.50348-0.50348V8a0.35756,0.35756,0,0,0-.54242-0.37738L5.51489,8.96637a0.38659,0.38659,0,0,1-.40942-0.62354L10.00916,2l4.90369,6.34283A0.3866,0.3866,0,0,1,14.50342,8.96637Z\"/>","on_ramp_left":"<path d=\"M9.00078,5.97986l0.011,0.00183a6.06019,6.06019,0,0,1,5.989,6.07324V16H14.99766l0.002,1.50317A0.49614,0.49614,0,0,1,14.50346,18H13.497a0.49622,0.49622,0,0,1-.49622-0.49622V12.05493A4.05782,4.05782,0,0,0,9.012,7.98169H7.01323a0.3576,0.3576,0,0,0-.37738.54248L7.9796,11.476a0.38659,0.38659,0,0,1-.62354.40942L1.00908,7l6.347-4.922a0.38659,0.38659,0,0,1,.62354.40942L6.63585,5.43927a0.35757,0.35757,0,0,0,.37738.54242H9.00078\"/>","on_ramp_right":"<path d=\"M10.99707,7.98169A4.05782,4.05782,0,0,0,7.0083,12.05493v5.44885A0.49622,0.49622,0,0,1,6.51208,18H5.50562a0.49614,0.49614,0,0,1-.49615-0.49683L5.01141,16H5.0083V12.05493a6.06019,6.06019,0,0,1,5.989-6.07324l0.011-.00183V5.98169h1.98755a0.35757,0.35757,0,0,0,.37738-0.54242L12.02948,2.48743A0.38659,0.38659,0,0,1,12.653,2.078L19,7l-6.347,4.88544a0.38659,0.38659,0,0,1-.62354-0.40942l1.34375-2.95184a0.3576,0.3576,0,0,0-.37738-0.54248H10.99707Z\"/>","off_ramp_left":"<path d=\"M14.5029,2.2A0.29744,0.29744,0,0,1,14.8,2.49712V17.50288A0.29744,0.29744,0,0,1,14.5029,17.8H13.4971A0.29744,0.29744,0,0,1,13.2,17.50288V2.49712A0.29744,0.29744,0,0,1,13.4971,2.2h1.0058m0-.2H13.4971A0.49711,0.49711,0,0,0,13,2.49712V17.50288A0.49711,0.49711,0,0,0,13.4971,18h1.0058A0.49711,0.49711,0,0,0,15,17.50288V2.49712A0.49711,0.49711,0,0,0,14.5029,2h0ZM9.00078,5.98169H7.01323a0.35757,0.35757,0,0,1-.37738-0.54242L7.9796,2.48743A0.38659,0.38659,0,0,0,7.35606,2.078L1.00908,7l6.347,4.88544A0.38659,0.38659,0,0,0,7.9796,11.476L6.63585,8.52417a0.3576,0.3576,0,0,1,.37738-0.54248H9.012a4.05782,4.05782,0,0,1,3.98877,4.07324v5.44885A0.49622,0.49622,0,0,0,13.497,18h1.00647a0.49614,0.49614,0,0,0,.49615-0.49683L14.99766,16h0.00311V12.05493a6.06019,6.06019,0,0,0-5.989-6.07324l-0.011-.00183\"/>","off_ramp_right":"<path d=\"M6.5029,2.2A0.29744,0.29744,0,0,1,6.8,2.49712V17.50288A0.29744,0.29744,0,0,1,6.5029,17.8H5.4971A0.29744,0.29744,0,0,1,5.2,17.50288V2.49712A0.29744,0.29744,0,0,1,5.4971,2.2H6.5029m0-.2H5.4971A0.49711,0.49711,0,0,0,5,2.49712V17.50288A0.49711,0.49711,0,0,0,5.4971,18H6.5029A0.49711,0.49711,0,0,0,7,17.50288V2.49712A0.49711,0.49711,0,0,0,6.5029,2h0Zm4.5054,5.98169h1.98755a0.3576,0.3576,0,0,1,.37738.54248L12.02948,11.476a0.38659,0.38659,0,0,0,.62354.40942L19,7,12.653,2.078a0.38659,0.38659,0,0,0-.62354.40942l1.34375,2.95184a0.35757,0.35757,0,0,1-.37738.54242H11.0083V5.97986l-0.011.00183a6.06019,6.06019,0,0,0-5.989,6.07324V16H5.01141l-0.002,1.50317A0.49614,0.49614,0,0,0,5.50562,18H6.51208a0.49622,0.49622,0,0,0,.49622-0.49622V12.05493a4.05782,4.05782,0,0,1,3.98877-4.07324H11.0083Z\"/>","fork_straight":"<path d=\"M17.75607,6.59766a0.30466,0.30466,0,0,1,.23035.10507l0.649,0.74859a0.30457,0.30457,0,0,1-.03369.43226L16.54129,9.622a5.4089,5.4089,0,0,0-1.73306,4.29459l0.0047,3.60769a0.29613,0.29613,0,0,1-.29614.29654H13.51031a0.29657,0.29657,0,0,1-.29623-0.29622L13.2135,14.04838a6.99129,6.99129,0,0,1,2.26944-5.62616l2.077-1.75275a0.30461,0.30461,0,0,1,.19617-0.07182m0-.2a0.50264,0.50264,0,0,0-.32516.119l-2.077,1.75275A7.25157,7.25157,0,0,0,13.0141,14.0638v3.46082a0.49622,0.49622,0,0,0,.49622.49622h1.00647a0.49616,0.49616,0,0,0,.49615-0.49681l-0.0047-3.60767a5.2182,5.2182,0,0,1,1.665-4.14405l2.05737-1.73586A0.50455,0.50455,0,0,0,18.7865,7.3203l-0.649-.74859a0.50345,0.50345,0,0,0-.38147-0.17406h0ZM2.24393,6.57682a0.30457,0.30457,0,0,1,.19617.07182l2.074,1.75018A7.00218,7.00218,0,0,1,6.78592,14.043v3.46088A0.29651,0.29651,0,0,1,6.48975,17.8H5.48322a0.29613,0.29613,0,0,1-.29614-0.29655L5.19086,13.9146a5.42,5.42,0,0,0-1.73517-4.316L1.39832,7.86274a0.30457,0.30457,0,0,1-.03369-0.43226l0.649-.74859a0.30466,0.30466,0,0,1,.23035-0.10507m0-.2a0.50345,0.50345,0,0,0-.38147.17406l-0.649.74859a0.50455,0.50455,0,0,0,.05585.71613L3.32672,9.75146a5.2182,5.2182,0,0,1,1.665,4.14405l-0.0047,3.60767A0.49616,0.49616,0,0,0,5.48322,18H6.48975a0.49616,0.49616,0,0,0,.49615-0.49615V14.043A7.25157,7.25157,0,0,0,4.64606,8.24854l-2.077-1.75275a0.50264,0.50264,0,0,0-.32516-0.119h0Zm12.66891,1.966L10.00916,2,5.10547,8.34283a0.38659,0.38659,0,0,0,.40942.62354L8.46674,7.62262A0.35756,0.35756,0,0,1,9.00916,8v9.49652A0.50346,0.50346,0,0,0,9.51263,18h0.993a0.50346,0.50346,0,0,0,.50348-0.50348V8a0.35755,0.35755,0,0,1,.54242-0.37738l2.95184,1.34375A0.3866,0.3866,0,0,0,14.91284,8.34283Z\"/>","fork_left":"<path d=\"M17.73611,6.57682a0.30465,0.30465,0,0,1,.23032.10507l0.649,0.74859a0.30457,0.30457,0,0,1-.03369.43226L16.5213,9.60119a5.4089,5.4089,0,0,0-1.73306,4.29459l0.0047,3.60769A0.29612,0.29612,0,0,1,14.4968,17.8H13.49033a0.29657,0.29657,0,0,1-.29623-0.29622l-0.00058-3.47624A6.99129,6.99129,0,0,1,15.463,8.40138l2.077-1.75275a0.30475,0.30475,0,0,1,.1962-0.07182m0-.2a0.50269,0.50269,0,0,0-.32516.119L15.334,8.24854A7.25157,7.25157,0,0,0,12.99411,14.043v3.46082A0.49622,0.49622,0,0,0,13.49033,18H14.4968a0.49614,0.49614,0,0,0,.49615-0.49681l-0.0047-3.60767a5.2182,5.2182,0,0,1,1.665-4.14405L18.71066,8.0156a0.50455,0.50455,0,0,0,.05585-0.71613l-0.649-.74859a0.50345,0.50345,0,0,0-.38147-0.17406h0ZM9.00078,5.98169H7.01323a0.35757,0.35757,0,0,1-.37738-0.54242L7.9796,2.48743A0.38659,0.38659,0,0,0,7.35606,2.078L1.00908,7l6.347,4.88544A0.38659,0.38659,0,0,0,7.9796,11.476L6.63585,8.52417a0.3576,0.3576,0,0,1,.37738-0.54248H9.012a4.05782,4.05782,0,0,1,3.98877,4.07324v5.44885A0.49622,0.49622,0,0,0,13.497,18h1.00647a0.49614,0.49614,0,0,0,.49615-0.49683L14.99766,16h0.00311V12.05493a6.06019,6.06019,0,0,0-5.989-6.07324l-0.011-.00183\"/>","fork_right":"<path d=\"M2.27386,6.57682A0.30457,0.30457,0,0,1,2.47,6.64864L4.544,8.39882A7.00218,7.00218,0,0,1,6.81586,14.043v3.46088A0.29651,0.29651,0,0,1,6.51968,17.8H5.51318A0.29613,0.29613,0,0,1,5.217,17.50343L5.22079,13.9146a5.42,5.42,0,0,0-1.73517-4.316L1.42825,7.86274a0.30461,0.30461,0,0,1-.03372-0.43226l0.649-.74859a0.30466,0.30466,0,0,1,.23035-0.10507m0-.2a0.50345,0.50345,0,0,0-.38147.17406l-0.649.74859a0.50458,0.50458,0,0,0,.05588.71613L3.35666,9.75146a5.2182,5.2182,0,0,1,1.665,4.14405L5.017,17.50317A0.49617,0.49617,0,0,0,5.51318,18h1.0065a0.49616,0.49616,0,0,0,.49615-0.49615V14.043A7.25157,7.25157,0,0,0,4.676,8.24854L2.599,6.49579a0.50264,0.50264,0,0,0-.32516-0.119h0ZM11.0083,7.98169h1.98755a0.3576,0.3576,0,0,1,.37738.54248L12.02948,11.476a0.38659,0.38659,0,0,0,.62354.40942L19,7,12.653,2.078a0.38659,0.38659,0,0,0-.62354.40942l1.34375,2.95184a0.35757,0.35757,0,0,1-.37738.54242H11.0083V5.97986l-0.011.00183a6.06019,6.06019,0,0,0-5.989,6.07324V16H5.01141l-0.002,1.50317A0.49614,0.49614,0,0,0,5.50562,18H6.51208a0.49622,0.49622,0,0,0,.49622-0.49622V12.05493a4.05782,4.05782,0,0,1,3.98877-4.07324H11.0083Z\"/>","roundabout":"<path d=\"M5.5,10.002a0.17879,0.17879,0,0,0,.27124.18866l1.47589-.67188a0.1933,0.1933,0,0,1,.20471.31177L5,13.002,2.54816,9.83051a0.1933,0.1933,0,0,1,.20471-0.31177l1.476,0.67188A0.17876,0.17876,0,0,0,4.5,10.002V10A5.51888,5.51888,0,0,1,7.25293,5.23437l0.5,0.86523A4.51856,4.51856,0,0,0,5.5,10v0.002Zm6.75146-3.89941A4.51948,4.51948,0,0,1,14.5,10h1a5.5223,5.5223,0,0,0-2.74756-4.7627L12.751,5.23724A0.17878,0.17878,0,0,1,12.72321,4.908L14.043,3.96576a0.19332,0.19332,0,0,0-.16766-0.33319l-3.97247.53766,1.52063,3.70911a0.19331,0.19331,0,0,0,.37238-0.02142L11.952,6.24377A0.17945,0.17945,0,0,1,12.25146,6.10254ZM12.74688,14.766a0.17879,0.17879,0,0,1,.299.14053l0.1561,1.61412a0.1933,0.1933,0,0,0,.37235.02141L15.095,12.833l-3.97245-.53766a0.1933,0.1933,0,0,0-.16764.33317l1.31982,0.94225a0.17879,0.17879,0,0,1-.02781.32923l0.00361-.00254a4.57684,4.57684,0,0,1-4.502,0l-0.501.86523a5.50442,5.50442,0,0,0,5.50391,0Z\"/>"};
+  function svgGiro(n) { return '<svg viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">' + (GIROS[n] || GIROS.turn_straight) + '</svg>'; }
+  // Códigos de maniobra de Valhalla -> icono (Mapbox directions-icons, dominio público).
+  var TIPO_ICONO = { 1: "depart_straight", 2: "depart_right", 3: "depart_left", 4: "arrive", 5: "arrive_right", 6: "arrive_left",
+    9: "turn_slight_right", 10: "turn_right", 11: "turn_sharp_right", 12: "uturn", 13: "uturn", 14: "turn_sharp_left", 15: "turn_left", 16: "turn_slight_left",
+    17: "on_ramp_straight", 18: "on_ramp_right", 19: "on_ramp_left", 20: "off_ramp_right", 21: "off_ramp_left",
+    22: "fork_straight", 23: "fork_right", 24: "fork_left", 25: "turn_straight", 26: "roundabout", 27: "roundabout" };
+  function iconoGiro(tipo) { return svgGiro(TIPO_ICONO[tipo] || "turn_straight"); }
+  // Frase hablada de cada maniobra, con "usted".
+  var VERBO = { 9: "gire levemente a la derecha", 10: "gire a la derecha", 11: "gire cerrado a la derecha", 14: "gire cerrado a la izquierda", 15: "gire a la izquierda", 16: "gire levemente a la izquierda",
+    12: "haga un cambio de sentido", 13: "haga un cambio de sentido", 17: "siga recto", 18: "tome la rampa a la derecha", 19: "tome la rampa a la izquierda", 20: "tome la salida a la derecha", 21: "tome la salida a la izquierda",
+    22: "siga recto", 23: "manténgase a la derecha", 24: "manténgase a la izquierda", 25: "incorpórese", 7: "siga recto", 8: "siga recto", 0: "siga recto" };
+  function fraseGiro(m, ins) {
+    var t = m.type, v = VERBO[t];
+    if (t === 26 || t === 27) { var n = /(\d+)/.exec(ins || ""); v = "entre a la rotonda" + (n ? " y tome la salida " + n[1] : ""); }
+    if (t === 4 || t === 5 || t === 6) return "llegará a su destino";
+    if (!v) return minus1(ins);
+    var c = /\s(por|hacia|sobre)\s+(.+?)\.?$/i.exec(ins || "");
+    return v + (c ? " " + c[1].toLowerCase() + " " + c[2] : "");
   }
 
   function toast(t, ms) {
@@ -1454,17 +1462,18 @@ if (window.maplibregl) {
       actualizarNorte();
     });
     $("btn-3d").addEventListener("click", function () {
-      var on = mapa.getPitch() < 5;
+      var on = !$("chk-3d").checked;
+      if (window.__vista) window.__vista(on ? "3d" : "plano", true);
       mapa.inclinar(on ? 55 : 0);
-      this.setAttribute("aria-pressed", on ? "true" : "false");
     });
 
     mapa.on("moveend", alMoverZonas);
     iniciarAjustes();
 
     $("form-buscar").addEventListener("submit", buscar);
-    $("q").addEventListener("input", function () { $("btn-limpiar").hidden = !$("q").value; });
-    $("btn-limpiar").addEventListener("click", function () { $("q").value = ""; $("btn-limpiar").hidden = true; $("resultados").hidden = true; $("q").focus(); });
+    $("q").addEventListener("input", function () { $("btn-limpiar").hidden = !$("q").value; if (!$("q").value) mostrarHistorial(); });
+    $("q").addEventListener("focus", function () { if (!$("q").value) mostrarHistorial(); });
+    $("btn-limpiar").addEventListener("click", function () { $("q").value = ""; $("btn-limpiar").hidden = true; $("resultados").hidden = true; $("q").focus(); mostrarHistorial(); });
     $("btn-ubicacion").addEventListener("click", ubicar);
     $("btn-guardar").addEventListener("click", alGuardar);
     $("q").addEventListener("focus", function () { if (!$("q").value.trim()) mostrarSitios(); });
@@ -1841,6 +1850,42 @@ if (window.maplibregl) {
     conTiempo(buscarPlaca(q), 12000).then(function (v) { listo("pla", v); }, function () { listo("pla", []); });
   }
 
+  var HIST_KEY = "ruta-legal-historial";
+  function leerHistorial() { try { var h = JSON.parse(localStorage.getItem(HIST_KEY) || "[]"); return Array.isArray(h) ? h : []; } catch (e) { return []; } }
+  function guardarHistorial(it) {
+    var h = leerHistorial().filter(function (x) { return !(Math.abs(x.lat - it.lat) < 0.0001 && Math.abs(x.lon - it.lon) < 0.0001); });
+    h.unshift({ nombre: it.nombre, sub: it.sub || "", lat: it.lat, lon: it.lon });
+    try { localStorage.setItem(HIST_KEY, JSON.stringify(h.slice(0, 12))); } catch (e) {}
+  }
+  function mostrarHistorial() {
+    var h = leerHistorial(), ul = $("resultados");
+    if (!h.length) { ul.hidden = true; return; }
+    ul.innerHTML = "";
+    var cab = document.createElement("li"); cab.className = "nota"; cab.textContent = "Búsquedas recientes";
+    cab.style.cssText = "padding:10px 14px 2px;font-size:0.75rem;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--muted)";
+    ul.appendChild(cab);
+    h.forEach(function (it) {
+      var li = document.createElement("li"), b = document.createElement("button");
+      b.type = "button";
+      var t = document.createElement("span"); t.className = "t"; t.textContent = "🕘 " + it.nombre;
+      var s = document.createElement("span"); s.className = "s"; s.textContent = it.sub;
+      b.appendChild(t); b.appendChild(s);
+      b.addEventListener("click", function () {
+        ul.hidden = true; $("q").blur();
+        var ll = [it.lat, it.lon];
+        mapa.setView(ll, 17);
+        seleccionarLugar(ll, it.nombre, it.sub);
+        guardarHistorial(it);
+      });
+      li.appendChild(b); ul.appendChild(li);
+    });
+    var bo = document.createElement("li"), bb = document.createElement("button");
+    bb.type = "button"; bb.textContent = "Borrar historial"; bb.style.cssText = "color:var(--muted);font-weight:700";
+    bb.addEventListener("click", function () { try { localStorage.removeItem(HIST_KEY); } catch (e) {} ul.hidden = true; });
+    bo.appendChild(bb); ul.appendChild(bo);
+    ul.hidden = false;
+  }
+
   function mostrarResultados(items) {
     var ul = $("resultados");
     ul.innerHTML = "";
@@ -1867,6 +1912,7 @@ if (window.maplibregl) {
         var ll = [it.lat, it.lon];
         mapa.setView(ll, 17);
         seleccionarLugar(ll, it.nombre, it.sub);
+        guardarHistorial(it);
       });
       li.appendChild(b);
       ul.appendChild(li);
@@ -2128,7 +2174,7 @@ if (window.maplibregl) {
           });
         });
         rutaPts = pts; rutaMan = man; rutaDest = b;
-        sigIdx = 0; avisadoMan = -1; llego = false; fueraRuta = 0;
+        sigIdx = 0; avisadoMan = -1; largoMan = -1; ahoraMan = -1; llego = false; fueraRuta = 0;
         rutaAcum = [0];
         for (var i = 1; i < pts.length; i++) rutaAcum[i] = rutaAcum[i - 1] + metros(pts[i - 1], pts[i]);
         var km = j.trip.summary.length, min = Math.max(1, Math.round(j.trip.summary.time / 60));
@@ -2184,7 +2230,7 @@ if (window.maplibregl) {
 
   function borrarRuta() {
     idRuta++;
-    lugar = null; origen = null; paradas = [];
+    lugar = null; origen = null; salidaPend = null; paradas = [];
     rutaPts = []; rutaMan = []; rutaAcum = []; rutaInfo = null; rutaDest = null;
     if (capaRuta) capaRuta.clearLayers();
     setEstado("idle");
@@ -2269,6 +2315,12 @@ if (window.maplibregl) {
     });
     pintar();
   }
+  function decirMetros(m) {
+    if (m >= 1000) { var k = Math.round(m / 100) / 10; return String(k).replace(".", ",") + (k === 1 ? " kilómetro" : " kilómetros"); }
+    var r = m >= 500 ? Math.round(m / 50) * 50 : Math.round(m / 10) * 10;
+    return r + " metros";
+  }
+  function minus1(s) { s = String(s || "").replace(/\.$/, ""); return s.charAt(0).toLowerCase() + s.slice(1); }
   function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
   function corto(t) {
     var s = String(t || "").trim().replace(/\.$/, "");
@@ -2392,6 +2444,7 @@ if (window.maplibregl) {
     var ed = $("chk-edif");
     if (ed) ed.addEventListener("change", function () { if (mapa && mapa.edificios3d) mapa.edificios3d(ed.checked); });
     if (ed && !ed.checked && mapa && mapa.edificios3d) mapa.edificios3d(false);
+    if (mapa && mapa.inclinar && $("chk-3d") && $("chk-3d").checked) mapa.inclinar(55);
   }
 
   function consultaZonas(b) {
@@ -2628,9 +2681,17 @@ if (window.maplibregl) {
 
   function pedirWake() {
     try {
+      var ka = esApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.KeepAwake;
+      if (ka) ka.keepAwake().catch(function () {});
+    } catch (e) {}
+    try {
       if (navigator.wakeLock) navigator.wakeLock.request("screen").then(function (w) { wake = w; }).catch(function () {});
     } catch (e) {}
   }
+  // El navegador suelta el bloqueo al ocultar la página: lo pedimos de nuevo al volver.
+  document.addEventListener("visibilitychange", function () {
+    if (document.visibilityState === "visible" && estadoMapa === "guia") pedirWake();
+  });
 
   function evaluarVelocidad(ll, kmh, acc) {
     var e = estadoActual;
@@ -2691,6 +2752,16 @@ if (window.maplibregl) {
       $("guia-prog").style.width = "0";
       return;
     }
+    if (salidaPend) {
+      var sp = salidaPend; salidaPend = null;
+      if (metros(ll, sp) > 200 && rutaDest) {
+        paradas.unshift(sp); ultRecalc = Date.now();
+        toast("Primero vas hasta tu punto de salida y de ahí sigue la ruta.", 5000);
+        if ($("chk-voz").checked) hablar("Primero vaya al punto de salida.");
+        trazar(ll, rutaDest, true);
+        return;
+      }
+    }
     var ult = rutaMan.length - 1;
     for (var k = ult; k >= sigIdx; k--) {
       if (metros(ll, rutaPts[rutaMan[k].begin_shape_index]) < 25) { sigIdx = Math.min(k + 1, ult); break; }
@@ -2707,10 +2778,10 @@ if (window.maplibregl) {
     $("guia-prog").style.width = Math.max(0, Math.min(100, (1 - pr.resto / Math.max(1, rutaInfo.total)) * 100)) + "%";
 
     if (sigIdx === ult && d < 25) {
-      $("turn-ico").innerHTML = ICONO.meta;
+      $("turn-ico").innerHTML = svgGiro("arrive");
       $("turn-dist").textContent = "Llegaste";
       $("turn-ins").textContent = "Has llegado a tu destino.";
-      if (!llego && $("chk-voz").checked) hablar("Llegaste a tu destino.");
+      if (!llego && $("chk-voz").checked) hablar("Llegó a su destino.");
       llego = true;
       return;
     }
@@ -2721,9 +2792,19 @@ if (window.maplibregl) {
     if (sigIdx === ult && /^(4|5|6)$/.test(String(m.type))) ins = "Llegas a tu destino.";
     else if (/^Llegaste a la parada/.test(ins)) ins = ins.replace("Llegaste", "Llegas");
     $("turn-ins").textContent = ins;
+    var frase = fraseGiro(m, m.instruction), esMeta = sigIdx === ult && /^(4|5|6)$/.test(String(m.type));
     if (d < 150 && avisadoMan !== sigIdx) {
       avisadoMan = sigIdx;
-      if ($("chk-voz").checked) hablar(nivelVoz === "completa" ? "Más adelante. " + ins : corto(ins) + " en " + (Math.round(d / 10) * 10) + ".");
+      if ($("chk-voz").checked) hablar("En " + decirMetros(d) + ", " + frase + ".");
+    }
+    if (d < 30 && ahoraMan !== sigIdx && !esMeta) {
+      ahoraMan = sigIdx;
+      if ($("chk-voz").checked) hablar(cap(frase) + ".");
+    }
+    // Tramo largo: avisa cuánto falta antes del próximo giro.
+    if (d >= 250 && largoMan !== sigIdx) {
+      largoMan = sigIdx;
+      if ($("chk-voz").checked) hablar("Siga " + decirMetros(d) + (esMeta ? " hasta su destino." : " y luego " + frase + "."));
     }
 
     if (paradas.length && metros(ll, paradas[0]) < 35) { paradas.shift(); toast("Parada alcanzada.", 3000); dibujarMarcadores(); }
@@ -2840,6 +2921,7 @@ if (window.maplibregl) {
     actualizarNorte();
     navId = vigilar();
     pedirWake();
+    salidaPend = origen;
     domAuto = false; cvHits = 0; cvFuera = 0; tramosCV = [];
     edu = { clave: "", texto: "", hasta: 0, tVoz: 0 }; prohibHits = { clave: "", n: 0 }; viaEst = { actual: null, cand: null, n: 0 }; supHits = { clave: "", n: 0 };
     recordarSeguridad();
@@ -2851,6 +2933,7 @@ if (window.maplibregl) {
       else if (navId !== null) navigator.geolocation.clearWatch(navId);
     } catch (e) {}
     navId = null;
+    try { var ka2 = esApp() && window.Capacitor.Plugins && window.Capacitor.Plugins.KeepAwake; if (ka2) ka2.allowSleep().catch(function () {}); } catch (e) {}
     try { if (wake) wake.release(); } catch (e) {}
     wake = null;
     try { if ("speechSynthesis" in window) window.speechSynthesis.cancel(); } catch (e) {}
