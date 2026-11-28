@@ -201,6 +201,11 @@
 
 
   /* ===== Pantalla de inicio (diseño nuevo) ===== */
+  .mibici { display: flex; align-items: center; gap: 12px; margin-top: 12px; }
+  .mibici-foto { width: 52px; height: 52px; border-radius: 50%; background: var(--surface) center/cover no-repeat; border: 2px dashed var(--muted); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; color: var(--muted); cursor: pointer; flex: none; }
+  .mibici-foto.tiene { border-style: solid; border-color: var(--accent, #1F6FEB); }
+  .mibici-foto.tiene span { display: none; }
+  #bici-nombre { flex: 1; min-width: 0; border: 0; border-bottom: 2px solid var(--line, #cbd5e1); background: transparent; color: inherit; font: inherit; font-weight: 700; font-size: 1.05rem; padding: 8px 2px; }
   .marca { display: flex; align-items: center; gap: 12px; }
   .marca h1 { font-size: 1.7rem; letter-spacing: -0.02em; font-weight: 800; }
   .marca .lead { margin: 2px 0 0; font-weight: 600; font-size: 0.95rem; }
@@ -263,6 +268,17 @@
   }
   .temas button[aria-pressed="true"] { background: var(--accent); color: var(--accent-fg); }
   .temas button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .temas.iconos button { width: 40px; height: 34px; padding: 0; display: grid; place-items: center; }
+  .temas.iconos svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+  .grp { border-top: 1px solid var(--line); }
+  .grp summary { cursor: pointer; padding: 10px 0; font-weight: 800; font-size: 0.8rem; letter-spacing: 0.06em; text-transform: uppercase; color: var(--muted); }
+  .grp[open] summary { color: var(--text, inherit); }
+  #vista-mapa[data-estado="guia"] .zoom { display: none; }
+  .q-inicio { width: 100%; box-sizing: border-box; margin-bottom: 10px; border: 2px solid var(--line); border-radius: 16px; background: var(--surface); color: inherit; font: inherit; font-weight: 600; padding: 12px 14px; }
+  .alerta { font-size: 0.92rem; }
+  .fila-tema.col { flex-direction: column; align-items: stretch; gap: 6px; }
+  .temas.voces { display: flex; }
+  .temas.voces button { flex: 1; padding: 6px 4px; }
   .fila-tema { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 8px 0; }
   .ajustes .temas { background: var(--bg); }
   body.en-mapa { overflow: hidden; }
@@ -360,6 +376,7 @@
   .sw input:checked { background: var(--accent); }
   .sw input:checked::after { transform: translateX(18px); }
   .sw input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .grupo { margin: 14px 0 2px; font-family: var(--font-display); font-weight: 800; font-size: 0.74rem; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
   .leyenda { margin: 6px 0 0; padding: 10px 0 0; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--muted); }
 
   .row-fab { display: flex; justify-content: flex-end; align-items: flex-end; gap: 12px; pointer-events: none; }
@@ -454,8 +471,14 @@
   .prog { position: absolute; left: 0; right: 0; bottom: 0; height: 3px; background: var(--line); }
   .prog i { display: block; height: 100%; width: 0; background: var(--nav); transition: width 0.4s; }
   .col-fab { display: flex; flex-direction: column; gap: 10px; align-items: flex-end; }
+  .sw small { display: block; font-size: 0.75rem; font-weight: 500; color: var(--muted); }
+  .capa-op { display: block; width: 100%; text-align: left; font: inherit; font-weight: 700; padding: 12px 14px; margin: 6px 0; border-radius: 14px; border: 2px solid var(--line); background: transparent; color: inherit; cursor: pointer; }
+  .capa-op small { display: block; font-weight: 500; font-size: 0.75rem; color: var(--muted); }
+  .capa-op[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft, transparent); }
+  #btn-capas[aria-expanded="true"] { background: var(--accent); color: var(--accent-fg); }
   .zoom { display: flex; flex-direction: column; gap: 10px; }
   .zoom .fab svg { width: 26px; height: 26px; }
+  .yo-tilt { width: 100%; height: 100%; transform: perspective(180px) rotateX(var(--tilt, 0deg)); transform-origin: 50% 60%; }
   .yo-bici .yo-rot, .yo-bici svg { display: block; width: 100%; height: 100%; transform-origin: 50% 50%; }
   .yo-bici svg { filter: drop-shadow(0 4px 4px rgb(0 0 0 / 0.45)) drop-shadow(0 0 1px rgb(0 0 0 / 0.5)); }
   .yo-bici { background: none; border: 0; }
@@ -486,13 +509,17 @@
         <p class="lead">Sabe por dónde puedes ir</p>
       </div>
     </div>
+    <div class="mibici">
+      <label class="mibici-foto" for="bici-foto" id="bici-avatar" title="Foto de tu bici"><span id="bici-avatar-txt">+</span></label>
+      <input id="bici-foto" type="file" accept="image/*" hidden>
+      <input id="bici-nombre" type="text" maxlength="30" placeholder="Ponle nombre a tu bici" aria-label="Nombre de tu bici" autocomplete="off">
+    </div>
     <div class="top-acciones">
       <button class="btn sec" id="btn-instalar" type="button" hidden>Instalar en mi celular</button>
-      <div class="temas" role="group" aria-label="Tema de color">
-        <button type="button" data-tema="auto" aria-pressed="true">Auto</button>
-        <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
-        <button type="button" data-tema="oscuro" aria-pressed="false">Oscuro</button>
-      <button type="button" data-tema="hora" aria-pressed="false">Por hora</button>
+      <div class="temas iconos" role="group" aria-label="Tema de color">
+        <button type="button" data-tema="claro" aria-pressed="false" aria-label="Tema claro" title="Claro"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg></button>
+        <button type="button" data-tema="oscuro" aria-pressed="false" aria-label="Tema oscuro" title="Oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
+        <button type="button" data-tema="auto" aria-pressed="true" aria-label="Automático: oscuro al atardecer, claro al amanecer" title="Automático"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20L12 4l7 16M8 14.5h8"/></svg></button>
       </div>
     </div>
   </header>
@@ -573,7 +600,7 @@
     </div>
   </footer>
 </div>
-<div class="cta"><div class="cta-in"><button class="btn big" id="btn-ir-mapa" type="button">Ir al mapa</button></div></div>
+<div class="cta"><div class="cta-in"><input class="q-inicio" id="q-inicio" type="search" placeholder="¿A dónde vas? (opcional)" aria-label="Escribe una dirección o lugar" autocomplete="off"><button class="btn big" id="btn-ir-mapa" type="button">Ir al mapa</button></div></div>
 </main>
 
 <main id="vista-mapa" hidden data-estado="idle">
@@ -622,22 +649,46 @@
     <button class="fab" id="btn-ciclo" type="button" aria-pressed="true" aria-label="Mostrar ciclorrutas">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3L2 8l10 5 10-5-10-5z"/><path d="M2 13l10 5 10-5"/></svg>
     </button>
+    <button class="fab" id="btn-capas" type="button" aria-expanded="false" aria-label="Capas del mapa">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 4L3 6v14l6-2 6 2 6-2V4l-6 2-6-2zM9 4v14M15 6v14"/></svg>
+    </button>
     <button class="fab" id="btn-ajustes" type="button" aria-label="Ajustes" aria-expanded="false">
       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h9M19 6h1M4 12h3M13 12h7M4 18h11M21 18h-1"/><circle cx="16" cy="6" r="2.2"/><circle cx="10" cy="12" r="2.2"/><circle cx="18" cy="18" r="2.2"/></svg>
     </button>
   </div>
 
   <div class="ajustes" id="ajustes" hidden>
-    <div class="fila-tema"><span>Tema</span><div class="temas" role="group" aria-label="Tema de color">
-      <button type="button" data-tema="auto" aria-pressed="true">Auto</button>
-      <button type="button" data-tema="claro" aria-pressed="false">Claro</button>
-      <button type="button" data-tema="oscuro" aria-pressed="false">Oscuro</button>
-      <button type="button" data-tema="hora" aria-pressed="false">Por hora</button>
-      </div></div>
-    <label class="sw" for="chk-voz"><span>Voz, sonido y vibración</span><input id="chk-voz" type="checkbox" checked></label>
-    <label class="sw" for="chk-sigue"><span>El mapa me sigue</span><input id="chk-sigue" type="checkbox" checked></label>
-    <label class="sw" for="chk-dom"><span>Estoy en la ciclovía dominical o festiva</span><input id="chk-dom" type="checkbox"></label>
-    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección. <span id="version">Versión 13 (inicio nuevo)</span></p>
+    <div class="fila-tema"><span>Tema</span><div class="temas iconos" role="group" aria-label="Tema de color">
+      <button type="button" data-tema="claro" aria-pressed="false" aria-label="Tema claro" title="Claro"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg></button>
+      <button type="button" data-tema="oscuro" aria-pressed="false" aria-label="Tema oscuro" title="Oscuro"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/></svg></button>
+      <button type="button" data-tema="auto" aria-pressed="true" aria-label="Automático: oscuro al atardecer, claro al amanecer" title="Automático"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 20L12 4l7 16M8 14.5h8"/></svg></button>
+    </div></div>
+    <div class="fila-tema col"><span>Voz</span><div class="temas voces" role="group" aria-label="Voz">
+      <button type="button" data-voz="apagada" aria-pressed="false">Apagada</button>
+      <button type="button" data-voz="alertas" aria-pressed="false">Alertas</button>
+      <button type="button" data-voz="corta" aria-pressed="true">Corta</button>
+      <button type="button" data-voz="completa" aria-pressed="false">Completa</button>
+    </div></div>
+    <input id="chk-voz" type="checkbox" checked hidden>
+    <input id="chk-sigue" type="checkbox" checked hidden>
+    <input id="chk-dom" type="checkbox" hidden>
+    <input id="chk-seg" type="checkbox" checked hidden>
+    <input id="chk-prohib" type="checkbox" checked hidden>
+    <input id="chk-z30" type="checkbox" checked hidden>
+    <input id="chk-capa-prohib" type="checkbox" hidden>
+    <input id="chk-capa-esc" type="checkbox" hidden>
+    <div id="vista-slot"></div>
+    <label class="sw" for="chk-avisos"><span>Avisos educativos<small>Casco, zonas prohibidas y 30 km/h</small></span><input id="chk-avisos" type="checkbox" checked></label>
+    <details class="grp"><summary>? Leyenda</summary>
+    <p class="leyenda">Línea gruesa: ciclorruta separada. Zona rellena: ciclorruta oficial del Catastro de Bogotá. Línea punteada: carril de bici en la calle. Verde puedes, ámbar con condición, rojo no puedes. Toca una línea para ver el detalle. Para elegir un destino, toca un punto del mapa o busca una dirección.</p>
+    </details>
+    <p class="leyenda"><span id="version">Versión 17 (menú simple)</span></p>
+  </div>
+
+  <div class="ajustes capas" id="capas" hidden>
+    <p class="grupo" style="margin-top:6px">Capas del mapa</p>
+    <button type="button" class="capa-op" data-capa="chk-capa-prohib" aria-pressed="false">Zonas prohibidas<small>Túneles, viaductos, TransMilenio</small></button>
+    <button type="button" class="capa-op" data-capa="chk-capa-esc" aria-pressed="false">Colegios y hospitales<small>Zonas de 30 km/h</small></button>
   </div>
 
   <div class="ov ov-bottom">
@@ -668,6 +719,7 @@
       <div class="actions">
         <button class="btn" id="btn-ir" type="button">Cómo llegar</button>
         <button class="btn sec" id="btn-salir-aqui" type="button">Salir de aquí</button>
+        <button class="btn sec" id="btn-parada" type="button">Añadir parada</button>
         <button class="btn sec guardar" id="btn-guardar" type="button" aria-label="Guardar sitio">☆</button>
       </div>
     </section>
@@ -687,6 +739,7 @@
         <button type="button" class="modo" data-modo="equilibrada" aria-pressed="true"><b>Equilibrada</b><span>—</span></button>
         <button type="button" class="modo" data-modo="ciclorruta" aria-pressed="false"><b>Ciclorruta</b><span>—</span></button>
       </div>
+      <p class="sub" id="ruta-paradas" hidden></p>
       <button class="btn" id="btn-iniciar" type="button">Iniciar</button>
       <details id="ruta-pasos">
         <summary>Indicaciones paso a paso</summary>
@@ -934,6 +987,11 @@
     }
     if (origen) pin(origen, "#0b8043", "Salida");
     var dest = (estadoMapa === "ruta" || estadoMapa === "guia") ? rutaDest : (lugar && lugar.ll);
+    paradas.forEach(function (q, i) {
+      var m = L.circleMarker(q, { pane: "ruta", radius: 9, weight: 3, color: "#ffffff", fillColor: "#F0A020", fillOpacity: 1 });
+      m.bindTooltip("Parada " + (i + 1));
+      capaLugar.addLayer(m);
+    });
     if (dest) pin(dest, "#d93025", "Llegada");
   }
 
@@ -961,6 +1019,8 @@
     mapa.on("click", alToque);
     mapa.on("contextmenu", alToque);
     mapa.on("moveend", alMover);
+    mapa.on("moveend", alMoverZonas);
+    iniciarAjustes();
 
     $("form-buscar").addEventListener("submit", buscar);
     $("q").addEventListener("input", function () { $("btn-limpiar").hidden = !$("q").value; });
@@ -978,6 +1038,7 @@
     });
     $("btn-ajustes").addEventListener("click", function () {
       var ab = $("ajustes").hidden;
+      if (ab) { $("capas").hidden = true; $("btn-capas").setAttribute("aria-expanded", "false"); }
       $("ajustes").hidden = !ab;
       this.setAttribute("aria-expanded", ab ? "true" : "false");
     });
@@ -989,6 +1050,15 @@
       setEstado("idle");
       dibujarMarcadores();
       toast("Salida marcada. Ahora toca el destino.", 3500);
+    });
+    $("btn-parada").addEventListener("click", function () {
+      if (!lugar) return;
+      if (paradas.length >= 5) { toast("Máximo 5 paradas.", 3000); return; }
+      paradas.push(lugar.ll);
+      lugar = null;
+      setEstado("idle");
+      dibujarMarcadores();
+      toast("Parada " + paradas.length + " añadida. Toca la siguiente parada o el destino final y pulsa Cómo llegar.", 5000);
     });
     $("lugar-cerrar").addEventListener("click", function () { lugar = null; setEstado("idle"); dibujarMarcadores(); });
     $("ruta-cerrar").addEventListener("click", borrarRuta);
@@ -1018,6 +1088,7 @@
     ultToque = t;
     $("ajustes").hidden = true;
     $("btn-ajustes").setAttribute("aria-expanded", "false");
+    $("capas").hidden = true; $("btn-capas").setAttribute("aria-expanded", "false");
     $("resultados").hidden = true;
     if (estadoMapa === "guia") return;
     seleccionarLugar([e.latlng.lat, e.latlng.lng]);
@@ -1198,6 +1269,7 @@
           return { features: (d.features || []).map(function (f) {
             var g = f.geometry, geo = null;
             if (g && g.rings) geo = { type: "Polygon", coordinates: g.rings };
+            else if (g && g.paths) geo = { type: "MultiLineString", coordinates: g.paths };
             else if (g && g.x !== undefined) geo = { type: "Point", coordinates: [g.x, g.y] };
             return { geometry: geo, properties: f.attributes || {} };
           }) };
@@ -1475,6 +1547,7 @@
     var dy = (b[2] - b[0]) * 0.25, dx = (b[3] - b[1]) * 0.25;
     var ex = [b[0] - dy, b[1] - dx, b[2] + dy, b[3] + dx];
     cargandoVista = true;
+    alMoverZonas();
     consultaCiclo(ex).then(function (els) {
       vistaCargada = ex;
       datosCiclo = els;
@@ -1566,6 +1639,7 @@
     equilibrada: { uso: 0.5, desc: "Equilibrio entre ciclorrutas y calles." },
     ciclorruta: { uso: 0.1, desc: "La más segura: prefiere ciclorrutas, aunque sea más larga." }
   };
+  var paradas = [];
   var modoRuta = "equilibrada", resumenModos = {}, rutaOrigen = null, idModos = 0;
 
   function usoPara(modo, e) { return (e && e.estado === "no") ? 0.9 : MODOS[modo].uso; }
@@ -1575,7 +1649,7 @@
   }
   function pedirValhalla(a, b, uso, vel) {
     var req = {
-      locations: [{ lat: a[0], lon: a[1] }, { lat: b[0], lon: b[1] }],
+      locations: [{ lat: a[0], lon: a[1] }].concat(paradas.map(function (q) { return { lat: q[0], lon: q[1] }; }), [{ lat: b[0], lon: b[1] }]),
       costing: "bicycle",
       costing_options: { bicycle: { bicycle_type: "Hybrid", cycling_speed: vel, use_roads: uso } },
       directions_options: { language: "es-ES", units: "kilometers" }
@@ -1603,9 +1677,17 @@
     pedirValhalla(a, b, usoPara(modoRuta, e), vel)
       .then(function (j) {
         if (mi !== idRuta) return;
-        var leg = j.trip.legs[0];
-        var pts = decodificar(leg.shape);
-        rutaPts = pts; rutaMan = leg.maneuvers || []; rutaDest = b;
+        var pts = [], man = [];
+        j.trip.legs.forEach(function (lg, li) {
+          var sp = decodificar(lg.shape), off = pts.length ? pts.length - 1 : 0;
+          pts = pts.concat(pts.length ? sp.slice(1) : sp);
+          (lg.maneuvers || []).forEach(function (m) {
+            var c = { instruction: m.instruction, begin_shape_index: m.begin_shape_index + off, type: m.type };
+            if (li < j.trip.legs.length - 1 && /^(4|5|6)$/.test(String(m.type))) c.instruction = "Llegaste a la parada " + (li + 1) + ".";
+            man.push(c);
+          });
+        });
+        rutaPts = pts; rutaMan = man; rutaDest = b;
         sigIdx = 0; avisadoMan = -1; llego = false; fueraRuta = 0;
         rutaAcum = [0];
         for (var i = 1; i < pts.length; i++) rutaAcum[i] = rutaAcum[i - 1] + metros(pts[i - 1], pts[i]);
@@ -1642,6 +1724,8 @@
           lista.appendChild(li);
         });
         $("ruta-pasos").hidden = !rutaMan.length;
+        $("ruta-paradas").hidden = !paradas.length;
+        $("ruta-paradas").textContent = paradas.length ? "Con " + paradas.length + (paradas.length === 1 ? " parada" : " paradas") + " en el camino." : "";
 
         if (soloModo) { mapa.fitBounds(linea.getBounds(), { padding: [40, 40] }); }
         else if (recalculo) { toast("Ruta actualizada.", 2500); }
@@ -1660,7 +1744,7 @@
 
   function borrarRuta() {
     idRuta++;
-    lugar = null; origen = null;
+    lugar = null; origen = null; paradas = [];
     rutaPts = []; rutaMan = []; rutaAcum = []; rutaInfo = null; rutaDest = null;
     if (capaRuta) capaRuta.clearLayers();
     setEstado("idle");
@@ -1710,6 +1794,344 @@
       }
     }
     return false;
+  }
+
+  // ===== Ciclovía: domingos y festivos de Colombia =====
+  function pascua(y) {
+    var a = y % 19, b = Math.floor(y / 100), c = y % 100, d = Math.floor(b / 4), e = b % 4, f = Math.floor((b + 8) / 25),
+        g = Math.floor((b - f + 1) / 3), h = (19 * a + b - d - g + 15) % 30, i = Math.floor(c / 4), k = c % 4,
+        l = (32 + 2 * e + 2 * i - h - k) % 7, m = Math.floor((a + 11 * h + 22 * l) / 451),
+        mes = Math.floor((h + l - 7 * m + 114) / 31), dia = ((h + l - 7 * m + 114) % 31) + 1;
+    return new Date(y, mes - 1, dia);
+  }
+  function sumar(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function alLunes(d) { var w = d.getDay(); return w === 1 ? d : sumar(d, (8 - w) % 7); }
+  function festivosCO(y) {
+    var P = pascua(y), L = [];
+    [[0, 1], [4, 1], [6, 20], [7, 7], [11, 8], [11, 25]].forEach(function (x) { L.push(new Date(y, x[0], x[1])); });
+    [[0, 6], [2, 19], [5, 29], [7, 15], [9, 12], [10, 1], [10, 11]].forEach(function (x) { L.push(alLunes(new Date(y, x[0], x[1]))); });
+    L.push(sumar(P, -3), sumar(P, -2), sumar(P, 43), sumar(P, 64), sumar(P, 71));
+    return L.map(function (d) { return d.getMonth() * 40 + d.getDate(); });
+  }
+  function esFestivoCO(d) { return festivosCO(d.getFullYear()).indexOf(d.getMonth() * 40 + d.getDate()) >= 0; }
+  function esDiaCiclovia(d) { var h = d.getHours(); return (d.getDay() === 0 || esFestivoCO(d)) && h >= 7 && h < 14; }
+  function iniciarCiclovia() {
+    // La ciclovía se detecta sola (revisarCiclovia); no hay botón.
+  }
+
+  // ===== Nivel de voz: completa, corta, alertas =====
+  var VOZ_KEY = "ruta-legal-voz", nivelVoz = "corta";
+  function iniciarVoz() {
+    try { var g = localStorage.getItem(VOZ_KEY); if (g === "completa" || g === "corta" || g === "alertas" || g === "apagada") nivelVoz = g; } catch (e) {}
+    function pintar() { $("chk-voz").checked = nivelVoz !== "apagada"; document.querySelectorAll("[data-voz]").forEach(function (b) { b.setAttribute("aria-pressed", b.dataset.voz === nivelVoz ? "true" : "false"); }); }
+    document.querySelectorAll("[data-voz]").forEach(function (b) {
+      b.addEventListener("click", function () { nivelVoz = b.dataset.voz; try { localStorage.setItem(VOZ_KEY, nivelVoz); } catch (e) {} pintar(); });
+    });
+    pintar();
+  }
+  function cap(s) { return s.charAt(0).toUpperCase() + s.slice(1); }
+  function corto(t) {
+    var s = String(t || "").trim().replace(/\.$/, "");
+    var r;
+    if ((r = /rotonda.*?(\d+)/i.exec(s))) return "Rotonda, salida " + r[1];
+    s = s.replace(/^Gira ligeramente a la (izquierda|derecha)/i, "$1 leve")
+         .replace(/^Gira bruscamente a la (izquierda|derecha)/i, "$1 cerrada")
+         .replace(/^Gira a la (izquierda|derecha)/i, "$1")
+         .replace(/^Mantente a la (izquierda|derecha)/i, "Sigue a la $1")
+         .replace(/^Contin[uú]a recto/i, "Recto")
+         .replace(/^Dir[ií]gete al? \w+/i, "Sigue")
+         .replace(/ por /, ", ").replace(/ hacia /, ", ");
+    return cap(s);
+  }
+
+  // ===== Ciclovía recreativa (capa oficial del Catastro/IDRD): se activa sola al entrar en ella =====
+  var CICLOVIA = "https://serviciosgis.catastrobogota.gov.co/arcgis/rest/services/recreaciondeporte/recreacion/MapServer/1";
+  var tramosCV = [], domAuto = false, cvHits = 0, cvFuera = 0, cargandoCV = false;
+  function cargarCiclovia(b) {
+    if (cargandoCV || !esDiaCiclovia(new Date())) return;
+    cargandoCV = true;
+    var url = CICLOVIA + "/query?where=1%3D1&geometry=" + [b[1], b[0], b[3], b[2]].map(function (x) { return x.toFixed(6); }).join(",") +
+      "&geometryType=esriGeometryEnvelope&inSR=4326&spatialRel=esriSpatialRelIntersects&outFields=OBJECTID&outSR=4326" +
+      "&geometryPrecision=6&resultRecordCount=1000";
+    consultaArcgis(url).then(function (j) {
+      var out = [];
+      (j.features || []).forEach(function (f) {
+        var g = f.geometry; if (!g) return;
+        var lines = g.type === "LineString" ? [g.coordinates] : (g.type === "MultiLineString" ? g.coordinates : []);
+        lines.forEach(function (ln) {
+          if (!ln || ln.length < 2) return;
+          var pts = ln.map(function (c) { return [c[1], c[0]]; }), c = { minLa: 90, maxLa: -90, minLo: 180, maxLo: -180, pts: pts };
+          pts.forEach(function (q) { c.minLa = Math.min(c.minLa, q[0]); c.maxLa = Math.max(c.maxLa, q[0]); c.minLo = Math.min(c.minLo, q[1]); c.maxLo = Math.max(c.maxLo, q[1]); });
+          out.push(c);
+        });
+      });
+      tramosCV = out;
+    }).catch(function () {}).then(function () { cargandoCV = false; });
+  }
+  function enCiclovia(ll, r) {
+    var m = 0.0003;
+    for (var i = 0; i < tramosCV.length; i++) {
+      var w = tramosCV[i];
+      if (ll[0] < w.minLa - m || ll[0] > w.maxLa + m || ll[1] < w.minLo - m || ll[1] > w.maxLo + m) continue;
+      for (var j = 0; j < w.pts.length - 1; j++) if (distSeg(ll, w.pts[j], w.pts[j + 1]) <= r) return true;
+    }
+    return false;
+  }
+  // Devuelve true si estás en la ciclovía (manual o detectada). Se confirma con 3 lecturas seguidas para evitar saltos.
+  function revisarCiclovia(ll, acc) {
+    if ($("chk-dom").checked) return true;
+    if (!esDiaCiclovia(new Date()) || !tramosCV.length) { domAuto = false; cvHits = 0; return false; }
+    var dentroCV = enCiclovia(ll, Math.max(15, Math.min(25, acc || 15)));
+    if (dentroCV) { cvHits++; cvFuera = 0; } else { cvFuera++; cvHits = 0; }
+    if (!domAuto && cvHits >= 3) {
+      domAuto = true;
+      if (nivelVoz !== "alertas") avisarEdu("dom-in", "Entras a la ciclovía, máximo " + REGLAS.ciclorrutaKmh + ".", "Entras a la ciclovía, máximo " + REGLAS.ciclorrutaKmh + ".", 5000);
+    } else if (domAuto && cvFuera >= 5) {
+      domAuto = false;
+      if (nivelVoz !== "alertas") avisarEdu("dom-out", "Sales de la ciclovía, máximo " + REGLAS.calzadaKmh + ".", "Sales de la ciclovía, máximo " + REGLAS.calzadaKmh + ".", 5000);
+    }
+    return domAuto;
+  }
+
+  // ===== Zonas y avisos para aprender las reglas =====
+  // Los datos salen de OpenStreetMap; pueden estar incompletos, por eso los avisos dicen "parece".
+  var zonas = { prohibidas: [], lentas: [], puntos: [], superficies: [] };
+  var AJUSTES_KEY = "ruta-legal-ajustes";
+  var IDS_AJUSTES = ["chk-seg", "chk-prohib", "chk-z30", "chk-capa-prohib", "chk-capa-esc"];
+  var capaProhib = null, capaEsc = null, edu = { clave: "", texto: "", hasta: 0, tVoz: 0 }, prohibHits = { clave: "", n: 0 };
+
+  function leerAjustes() { try { return JSON.parse(localStorage.getItem(AJUSTES_KEY) || "{}") || {}; } catch (e) { return {}; } }
+  function iniciarBici() {
+    var av = $("bici-avatar"), nm = $("bici-nombre");
+    function pintar(url) { if (url) { av.style.backgroundImage = "url(" + url + ")"; av.classList.add("tiene"); } }
+    try { nm.value = localStorage.getItem("ruta-legal-bici-nombre") || ""; pintar(localStorage.getItem("ruta-legal-bici-foto")); } catch (e) {}
+    nm.addEventListener("input", function () { try { localStorage.setItem("ruta-legal-bici-nombre", nm.value.trim()); } catch (e) {} });
+    $("bici-foto").addEventListener("change", function () {
+      var f = this.files && this.files[0]; if (!f) return;
+      var img = new Image(), url = URL.createObjectURL(f);
+      img.onload = function () {
+        var s = 160, c = document.createElement("canvas"); c.width = c.height = s;
+        var m = Math.min(img.width, img.height), cx = c.getContext("2d");
+        cx.drawImage(img, (img.width - m) / 2, (img.height - m) / 2, m, m, 0, 0, s, s);
+        var d = c.toDataURL("image/jpeg", 0.8); URL.revokeObjectURL(url);
+        try { localStorage.setItem("ruta-legal-bici-foto", d); } catch (e) {}
+        pintar(d);
+      };
+      img.onerror = function () { toast("No pude leer esa foto.", 3000); };
+      img.src = url;
+    });
+  }
+  function iniciarAjustes() {
+    var g = leerAjustes();
+    IDS_AJUSTES.forEach(function (id) {
+      var el = $(id); if (!el) return;
+      if (typeof g[id] === "boolean") el.checked = g[id];
+      el.addEventListener("change", function () {
+        var h = leerAjustes(); h[id] = el.checked;
+        try { localStorage.setItem(AJUSTES_KEY, JSON.stringify(h)); } catch (e) {}
+        if (id === "chk-capa-prohib" || id === "chk-capa-esc") { pintarZonas(); vistaZonas = null; alMoverZonas(); }
+      });
+    });
+    var av = $("chk-avisos"), tres = ["chk-seg", "chk-prohib", "chk-z30"];
+    av.checked = tres.some(function (id) { return $(id).checked; });
+    av.addEventListener("change", function () {
+      var h = leerAjustes();
+      tres.forEach(function (id) { $(id).checked = av.checked; h[id] = av.checked; });
+      try { localStorage.setItem(AJUSTES_KEY, JSON.stringify(h)); } catch (e) {}
+    });
+    function pintarCapas() { document.querySelectorAll("[data-capa]").forEach(function (b) { b.setAttribute("aria-pressed", $(b.dataset.capa).checked ? "true" : "false"); }); }
+    document.querySelectorAll("[data-capa]").forEach(function (b) {
+      b.addEventListener("click", function () { var c = $(b.dataset.capa); c.checked = !c.checked; c.dispatchEvent(new Event("change")); pintarCapas(); });
+    });
+    pintarCapas();
+    $("btn-capas").addEventListener("click", function () {
+      var abierto = $("capas").hidden;
+      $("capas").hidden = !abierto; this.setAttribute("aria-expanded", abierto ? "true" : "false");
+      if (abierto) { $("ajustes").hidden = true; $("btn-ajustes").setAttribute("aria-expanded", "false"); }
+    });
+    var ed = $("chk-edif");
+    if (ed) ed.addEventListener("change", function () { if (mapa && mapa.edificios3d) mapa.edificios3d(ed.checked); });
+    if (ed && !ed.checked && mapa && mapa.edificios3d) mapa.edificios3d(false);
+  }
+
+  function consultaZonas(b) {
+    var bb = b.map(function (x) { return x.toFixed(5); }).join(",");
+    var sinPeatonal = '["highway"!~"^(footway|cycleway|path|pedestrian|steps|service|track|corridor|bridleway)$"]';
+    var q = "[out:json][timeout:25];(" +
+      'way["highway"]' + sinPeatonal.replace('["highway"!~', '["highway"!~') + '["tunnel"="yes"](' + bb + ");" +
+      'way["highway"]' + sinPeatonal + '["bridge"="viaduct"](' + bb + ");" +
+      'way["highway"~"^(motorway|motorway_link)$"](' + bb + ");" +
+      'way["highway"]["maxspeed"~"^(8[0-9]|9[0-9]|1[0-9][0-9])$"](' + bb + ");" +
+      'way["highway"~"^(busway|bus_guideway)$"](' + bb + ");" +
+      'way["highway"]["maxspeed"~"^(10|15|20|25|30)$"](' + bb + ");" +
+      'way["highway"~"^(residential|tertiary|secondary|primary|unclassified|living_street|service|cycleway|track)$"]["surface"~"^(unpaved|gravel|dirt|ground|sand|mud|compacted|fine_gravel|cobblestone|sett|paving_stones)$"](' + bb + ");" +
+      'node["amenity"~"^(school|kindergarten|college|hospital|clinic)$"](' + bb + ");" +
+      'way["amenity"~"^(school|kindergarten|college|hospital|clinic)$"](' + bb + ");" +
+      ");out geom tags;";
+    return pedir(q, 0).then(function (j) {
+      var z = { prohibidas: [], lentas: [], puntos: [], superficies: [] };
+      ((j && j.elements) || []).slice(0, 4000).forEach(function (el) {
+        var t = el.tags || {}, pts = null;
+        if (el.type === "way" && el.geometry && el.geometry.length > 1) pts = el.geometry.map(function (g) { return [g.lat, g.lon]; });
+        if (t.amenity) {
+          var c = el.type === "node" ? [el.lat, el.lon] : (pts ? pts[Math.floor(pts.length / 2)] : null);
+          if (c) z.puntos.push({ ll: c, hosp: /hospital|clinic/.test(t.amenity) });
+          return;
+        }
+        if (!pts) return;
+        var caja = { minLa: 90, maxLa: -90, minLo: 180, maxLo: -180, pts: pts };
+        pts.forEach(function (q2) { caja.minLa = Math.min(caja.minLa, q2[0]); caja.maxLa = Math.max(caja.maxLa, q2[0]); caja.minLo = Math.min(caja.minLo, q2[1]); caja.maxLo = Math.max(caja.maxLo, q2[1]); });
+        var ms = parseInt(t.maxspeed, 10);
+        if (t.highway === "busway" || t.highway === "bus_guideway") {
+          caja.clave = "tm"; caja.r = 6; caja.n = 5;
+          caja.texto = "Parece que vas por un carril exclusivo de TransMilenio. No está permitido para bicicletas eléctricas.";
+          caja.voz = "Parece que vas por un carril de TransMilenio. No está permitido para bicicletas eléctricas.";
+          z.prohibidas.push(caja);
+        } else if (t.tunnel === "yes") {
+          caja.clave = "tunel"; caja.r = 8; caja.n = 3;
+          caja.texto = "Parece que vas por un túnel. Los túneles no están permitidos para bicicletas eléctricas.";
+          caja.voz = "Parece que vas por un túnel. Los túneles no están permitidos para bicicletas eléctricas.";
+          z.prohibidas.push(caja);
+        } else if (t.bridge === "viaduct") {
+          caja.clave = "viaducto"; caja.r = 8; caja.n = 3;
+          caja.texto = "Parece que vas por un viaducto. Los viaductos no están permitidos para bicicletas eléctricas.";
+          caja.voz = "Parece que vas por un viaducto. No está permitido para bicicletas eléctricas.";
+          z.prohibidas.push(caja);
+        } else if (/^motorway/.test(t.highway || "") || ms >= 80) {
+          caja.clave = "rapida"; caja.r = 8; caja.n = 3;
+          caja.texto = "Parece que vas por una vía rápida de 80 km/h o más. No está permitida para bicicletas eléctricas.";
+          caja.voz = "Parece que vas por una vía rápida. No está permitida para bicicletas eléctricas.";
+          z.prohibidas.push(caja);
+        } else if (ms > 0 && ms <= 30) {
+          caja.kmh = ms; z.lentas.push(caja);
+        } else if (t.surface) {
+          var emp = /cobblestone|sett|paving_stones/.test(t.surface);
+          caja.clave = emp ? "sup-emp" : "sup-sin"; caja.texto = emp ? "Tramo empedrado: ve despacio." : "Tramo sin pavimentar: ve despacio.";
+          z.superficies.push(caja);
+        }
+      });
+      return z;
+    });
+  }
+
+  function cargarZonas(b) {
+    return consultaZonas(b).then(function (z) { zonas = z; pintarZonas(); }).catch(function () {});
+  }
+
+  var vistaZonas = null, tZonas = null, cargandoZonas = false;
+  function alMoverZonas() {
+    if (!mapa || estadoMapa === "guia") return;
+    if (!$("chk-capa-prohib").checked && !$("chk-capa-esc").checked) return;
+    clearTimeout(tZonas);
+    tZonas = setTimeout(function () {
+      if (cargandoZonas || mapa.getZoom() < 14) return;
+      var g = mapa.getBounds(), b = [g.getSouth(), g.getWest(), g.getNorth(), g.getEast()];
+      if (dentro(b, vistaZonas)) return;
+      var dy = (b[2] - b[0]) * 0.25, dx = (b[3] - b[1]) * 0.25, ex = [b[0] - dy, b[1] - dx, b[2] + dy, b[3] + dx];
+      cargandoZonas = true;
+      cargarZonas(ex).then(function () { vistaZonas = ex; cargandoZonas = false; });
+    }, 800);
+  }
+
+  function pintarZonas() {
+    if (!mapa) return;
+    if (!capaProhib) { capaProhib = L.layerGroup().addTo(mapa); capaEsc = L.layerGroup().addTo(mapa); }
+    capaProhib.clearLayers(); capaEsc.clearLayers();
+    if ($("chk-capa-prohib").checked) {
+      zonas.prohibidas.forEach(function (w) {
+        capaProhib.addLayer(L.polyline(w.pts, { color: "#E5384A", weight: 6, opacity: 0.85, dashArray: "2 8", interactive: false }));
+      });
+    }
+    if ($("chk-capa-esc").checked) {
+      zonas.puntos.forEach(function (c) {
+        capaEsc.addLayer(L.circle(c.ll, { radius: 120, color: c.hosp ? "#E5384A" : "#F0A020", weight: 2, fillOpacity: 0.12, interactive: false }));
+      });
+    }
+  }
+
+  function zonaProhibida(ll) {
+    var m = 0.0003;
+    for (var i = 0; i < zonas.prohibidas.length; i++) {
+      var w = zonas.prohibidas[i];
+      if (ll[0] < w.minLa - m || ll[0] > w.maxLa + m || ll[1] < w.minLo - m || ll[1] > w.maxLo + m) continue;
+      for (var j = 0; j < w.pts.length - 1; j++) if (distSeg(ll, w.pts[j], w.pts[j + 1]) <= w.r) return w;
+    }
+    return null;
+  }
+
+  function zonaLenta(ll) {
+    var m = 0.0003;
+    for (var i = 0; i < zonas.lentas.length; i++) {
+      var w = zonas.lentas[i];
+      if (ll[0] < w.minLa - m || ll[0] > w.maxLa + m || ll[1] < w.minLo - m || ll[1] > w.maxLo + m) continue;
+      for (var j = 0; j < w.pts.length - 1; j++) if (distSeg(ll, w.pts[j], w.pts[j + 1]) <= 12) return { kmh: w.kmh, donde: "Vía de " + w.kmh };
+    }
+    if ($("chk-z30").checked) {
+      for (var k = 0; k < zonas.puntos.length; k++) if (metros(ll, zonas.puntos[k].ll) <= 120) return { kmh: 30, donde: zonas.puntos[k].hosp ? "Zona hospital" : "Zona escolar" };
+    }
+    return null;
+  }
+
+  // Aviso educativo: se muestra un rato y se dice una sola vez por episodio.
+  function avisarEdu(clave, texto, voz, ms) {
+    var ahora = Date.now();
+    var nuevo = clave !== edu.clave || ahora - edu.tVoz > 60000;
+    edu.clave = clave; edu.texto = texto; edu.hasta = ahora + (ms || 9000);
+    if (nuevo) {
+      edu.tVoz = ahora;
+      if ($("chk-voz").checked) { hablar(voz || texto); try { if (navigator.vibrate) navigator.vibrate([200, 100, 200]); } catch (e) {} }
+    }
+  }
+
+  function revisarProhibida(ll, kmh, acc, via) {
+    if (!$("chk-prohib").checked || via || kmh < 4 || (acc && acc > 18)) { prohibHits.n = 0; return; }
+    var w = zonaProhibida(ll);
+    if (!w) { prohibHits.n = 0; prohibHits.clave = ""; return; }
+    prohibHits.n = prohibHits.clave === w.clave ? prohibHits.n + 1 : 1;
+    prohibHits.clave = w.clave;
+    if (prohibHits.n >= w.n) avisarEdu(w.clave, w.texto, w.voz, 12000);
+  }
+
+  function avisoDominical() {
+    var d = new Date(), h = d.getHours();
+    if (!esDiaCiclovia(d) || $("chk-dom").checked) return false;
+    var t = "Hoy hay ciclovía en Bogotá, normalmente de 7 a. m. a 2 p. m. Cuando entres a ella, la app lo detecta sola.";
+    setTimeout(function () { if (estadoMapa === "guia") avisarEdu("dom", t, t, 12000); }, 12000);
+    return true;
+  }
+
+  var viaEst = { actual: null, cand: null, n: 0 };
+  function revisarVia(via, dom, kmh) {
+    if (dom) { viaEst.actual = true; viaEst.n = 0; return; }
+    if (viaEst.actual === null) { if (++viaEst.n >= 2) { viaEst.actual = via; viaEst.n = 0; } return; }
+    if (via === viaEst.actual) { viaEst.n = 0; return; }
+    if (++viaEst.n < 3) return;
+    viaEst.actual = via; viaEst.n = 0;
+    if (nivelVoz === "alertas" || kmh < 3) return;
+    if (via) avisarEdu("via-in", "Entras a ciclorruta, máximo " + REGLAS.ciclorrutaKmh + ".", "Entras a ciclorruta, máximo " + REGLAS.ciclorrutaKmh + ".", 5000);
+    else avisarEdu("via-out", "Sales de ciclorruta, máximo " + REGLAS.calzadaKmh + ".", "Sales de ciclorruta, máximo " + REGLAS.calzadaKmh + ".", 5000);
+  }
+  var supHits = { clave: "", n: 0 };
+  function revisarSuperficie(ll, kmh, acc) {
+    if (nivelVoz === "alertas" || kmh < 4 || (acc && acc > 18) || !zonas.superficies.length) { supHits.n = 0; return; }
+    var m = 0.0002, hit = null;
+    for (var i = 0; i < zonas.superficies.length && !hit; i++) {
+      var w = zonas.superficies[i];
+      if (ll[0] < w.minLa - m || ll[0] > w.maxLa + m || ll[1] < w.minLo - m || ll[1] > w.maxLo + m) continue;
+      for (var j = 0; j < w.pts.length - 1; j++) if (distSeg(ll, w.pts[j], w.pts[j + 1]) <= 8) { hit = w; break; }
+    }
+    if (!hit) { supHits.n = 0; supHits.clave = ""; return; }
+    supHits.n = supHits.clave === hit.clave ? supHits.n + 1 : 1; supHits.clave = hit.clave;
+    if (supHits.n >= 3) avisarEdu(hit.clave, hit.texto, hit.texto, 5000);
+  }
+
+  function recordarSeguridad() {
+    avisoDominical();
+    if (!$("chk-seg").checked) return;
+    var h = new Date().getHours(), noche = h >= 18 || h < 6;
+    var t = noche ? "Es de noche: usa casco, prenda reflectiva y luces blanca adelante y roja atrás."
+                  : "Antes de arrancar: el casco es obligatorio.";
+    setTimeout(function () { if (estadoMapa === "guia") avisarEdu("seg", t, t, 10000); }, 1500);
   }
 
   // Cuánto falta por la ruta y qué tan lejos estás de ella.
@@ -1772,22 +2194,32 @@
 
   function evaluarVelocidad(ll, kmh, acc) {
     var e = estadoActual;
-    var dom = $("chk-dom").checked;
+    var dom = revisarCiclovia(ll, acc);
     var via = dom || enCiclo(ll, Math.max(12, Math.min(25, acc || 15)));
     var lim = via ? REGLAS.ciclorrutaKmh : REGLAS.calzadaKmh;
     var donde = dom ? "Ciclovía" : (via ? "Ciclorruta" : "Calle");
+    if (!via) {
+      var zl = zonaLenta(ll);
+      if (zl && zl.kmh < lim) { lim = zl.kmh; donde = zl.donde; }
+      if (zl && zl.kmh <= 30) avisarEdu("z" + zl.donde, "Entras en " + zl.donde.toLowerCase() + ": máximo " + zl.kmh + " km/h.", "Zona de velocidad reducida. Máximo " + zl.kmh + ".", 6000);
+    }
+    revisarProhibida(ll, kmh, acc, via);
+    revisarVia(via, dom, kmh);
+    revisarSuperficie(ll, kmh, acc);
     var tipo = "", texto = "", voz = "";
     if (via && e && e.estado === "no") {
       tipo = "ciclo-no";
       texto = "Estás en una ciclorruta y tu bici no puede usarla. Pasa a la calle.";
-      voz = "Estás en una ciclorruta que tu bici no puede usar. Pasa a la calle.";
+      voz = nivelVoz === "completa" ? "Estás en una ciclorruta que tu bici no puede usar. Pasa a la calle." : "Ciclorruta no permitida. Pasa a la calle.";
     } else if (kmh > lim + 1) {
       tipo = via ? "ciclo-vel" : "calle-vel";
       var multa = Math.round((REGLAS.smldvPesos || 58363) * (REGLAS.multaVelocidadSmldv || 6) / 1000) * 1000;
       var multaTxt = "$" + multa.toLocaleString("es-CO");
-      texto = "Vas a " + Math.round(kmh) + " km/h. " + (dom ? "En la ciclovía" : (via ? "En ciclorruta" : "En la calle")) + " el máximo es " + lim + ". Baja la velocidad: te expones a un comparendo de unos " + multaTxt + ".";
-      voz = "Baja la velocidad. El máximo es " + lim + ".";
-      if (tipo !== ultAlerta.tipo) voz += " Te expones a un comparendo de unos " + Math.round(multa / 1000) + " mil pesos.";
+      texto = Math.round(kmh) + " km/h, máximo " + lim + ". Multa: unos " + multaTxt + ".";
+      if (nivelVoz === "completa") {
+        voz = "Baja la velocidad. El máximo es " + lim + ".";
+        if (tipo !== ultAlerta.tipo) voz += " Te expones a un comparendo de unos " + Math.round(multa / 1000) + " mil pesos.";
+      } else voz = "Baja a " + lim + ".";
     }
     $("hud-kmh-n").textContent = Math.round(kmh);
     $("hud-lim-n").textContent = lim;
@@ -1795,8 +2227,9 @@
     $("speedo").classList.toggle("over", tipo !== "");
     $("hud-estado").textContent = tipo === "" ? "Dentro del límite" : (tipo === "ciclo-no" ? "No puedes usar esta vía" : "Reduce la velocidad");
     var al = $("hud-alerta");
-    al.hidden = tipo === "";
-    al.textContent = texto;
+    var eduActivo = tipo === "" && Date.now() < edu.hasta;
+    al.hidden = tipo === "" && !eduActivo;
+    al.textContent = tipo !== "" ? texto : (eduActivo ? edu.texto : "");
     var ahora = Date.now();
     if (tipo && $("chk-voz").checked) {
       if (ahora - ultAlerta.tBip > 4000) { pitar(); ultAlerta.tBip = ahora; }
@@ -1844,11 +2277,16 @@
     llego = false;
     $("turn-ico").innerHTML = iconoGiro(m.type);
     $("turn-dist").textContent = textoDistancia(d);
-    $("turn-ins").textContent = m.instruction;
+    var ins = m.instruction;
+    if (sigIdx === ult && /^(4|5|6)$/.test(String(m.type))) ins = "Llegas a tu destino.";
+    else if (/^Llegaste a la parada/.test(ins)) ins = ins.replace("Llegaste", "Llegas");
+    $("turn-ins").textContent = ins;
     if (d < 150 && avisadoMan !== sigIdx) {
       avisadoMan = sigIdx;
-      if ($("chk-voz").checked) hablar("Más adelante. " + m.instruction);
+      if ($("chk-voz").checked) hablar(nivelVoz === "completa" ? "Más adelante. " + ins : corto(ins) + " en " + (Math.round(d / 10) * 10) + ".");
     }
+
+    if (paradas.length && metros(ll, paradas[0]) < 35) { paradas.shift(); toast("Parada alcanzada.", 3000); dibujarMarcadores(); }
 
     // Si te sales de la ruta, la recalcula desde donde estás.
     if (pr.desvio > 50) fueraRuta++; else fueraRuta = 0;
@@ -1865,6 +2303,8 @@
     if (navCargando) return;
     navCargando = true; cicloEstado = "cargando";
     var d = 0.01;
+    cargarZonas([ll[0] - d, ll[1] - d, ll[0] + d, ll[1] + d]);
+    cargarCiclovia([ll[0] - d, ll[1] - d, ll[0] + d, ll[1] + d]);
     consultaCiclo([ll[0] - d, ll[1] - d, ll[0] + d, ll[1] + d]).then(function (els) {
       datosCiclo = els;
       navCentro = ll; cicloEstado = "ok";
@@ -1959,6 +2399,9 @@
     if (navUlt) mapa.setView(navUlt.ll, 17);
     navId = vigilar();
     pedirWake();
+    domAuto = false; cvHits = 0; cvFuera = 0; tramosCV = [];
+    edu = { clave: "", texto: "", hasta: 0, tVoz: 0 }; prohibHits = { clave: "", n: 0 }; viaEst = { actual: null, cand: null, n: 0 }; supHits = { clave: "", n: 0 };
+    recordarSeguridad();
   }
 
   function detenerGuia() {
@@ -1981,18 +2424,17 @@
   var temaActual = "auto";
   function esNoche() {
     var d = new Date(), h = d.getHours() + d.getMinutes() / 60;
-    return h >= 18 || h < 5.5;
+    return h >= 17.75 || h < 5.75;
   }
   setInterval(function () {
-    if (temaActual === "hora") aplicarTema("hora", false);
+    if (temaActual === "auto") aplicarTema("auto", false);
   }, 60000);
 
   function aplicarTema(m, guardar) {
     var r = document.documentElement;
     if (m === "claro") r.setAttribute("data-theme", "light");
     else if (m === "oscuro") r.setAttribute("data-theme", "dark");
-    else if (m === "hora") r.setAttribute("data-theme", esNoche() ? "dark" : "light");
-    else { r.removeAttribute("data-theme"); m = "auto"; }
+    else { r.setAttribute("data-theme", esNoche() ? "dark" : "light"); m = "auto"; }
     temaActual = m;
     if (guardar) { try { localStorage.setItem(TEMA_KEY, m); } catch (e) {} }
     document.querySelectorAll("[data-tema]").forEach(function (b) {
@@ -2046,7 +2488,15 @@
     ["w", "v", "kg"].forEach(function (id) { $(id).addEventListener("input", render); });
     $("lim").addEventListener("change", render);
     document.querySelectorAll('input[name="acel"]').forEach(function (r) { r.addEventListener("change", render); });
-    $("btn-ir-mapa").addEventListener("click", function () { location.hash = "mapa"; });
+    iniciarBici(); iniciarCiclovia(); iniciarVoz();
+    $("btn-ir-mapa").addEventListener("click", function () {
+      var q0 = $("q-inicio").value.trim();
+      location.hash = "mapa";
+      if (!q0) return;
+      var n = 0, t = setInterval(function () {
+        if (mapa || ++n > 25) { clearInterval(t); if (mapa) { $("q").value = q0; $("btn-limpiar").hidden = false; $("form-buscar").dispatchEvent(new Event("submit", { cancelable: true })); $("q-inicio").value = ""; } }
+      }, 200);
+    });
     $("btn-volver").addEventListener("click", function () { location.hash = "bici"; });
     $("chip-bici").addEventListener("click", function () { location.hash = "bici"; });
     $("btn-instalar").addEventListener("click", function () {
@@ -2060,6 +2510,7 @@
     });
     var guardado = "auto";
     try { guardado = localStorage.getItem(TEMA_KEY) || "auto"; } catch (e) {}
+    if (guardado !== "claro" && guardado !== "oscuro") guardado = "auto";
     aplicarTema(guardado, false);
     window.addEventListener("hashchange", porHash);
     render();
